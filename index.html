@@ -230,7 +230,7 @@ function overallRawText(r, key, dm){
     const main = dm === 'rank' ? `${fmt(e.raw,0)}位` : `${fmt(e.raw,0)}勝`;
     return `${main} / 盾${fmt(e.shields,0)}枚`;
   }
-  if (key === 'karaoke') return `平均${fmt(e.raw,2)}点`;
+  if (key === 'karaoke') return `合計${fmt(e.totalScore,1)}点 / 誤差${fmt(e.diff,1)}点`;
   if (key === 'darts') return `${e.type} ${fmt(e.raw,0)}点`;
   return '';
 }
@@ -245,7 +245,7 @@ function renderResults(c){
       <td>${rankingCell(r.events.duel.total, overallRawText(r,'duel',c.dm))}</td>
       <td>${rankingCell(r.events.karaoke.total, overallRawText(r,'karaoke',c.dm))}</td>
       <td>${rankingCell(r.events.darts.total, overallRawText(r,'darts',c.dm))}</td>
-      <td><div class="scoreCell"><b>${fmt(r.total)}</b><span class="rawScore">総合点</span></div></td>
+      <td><div class="scoreCell"><b>${fmt(r.total)}</b></div></td>
     </tr>`).join('')}</tbody></table></div>`;
 
   const names = { bowling:'ボウリング', wanko:'わんこそば', duel:'デュエマ', karaoke:'カラオケ', darts:'ダーツ' };
