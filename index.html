@@ -13,7 +13,29 @@ label{display:block;font-weight:700;font-size:14px;margin-bottom:5px}input,texta
 input,textarea,select{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:10px;padding:9px;background:#fff}
 input[readonly]{background:#f9fafb}textarea{min-height:120px}
 button{border:0;border-radius:999px;padding:10px 18px;background:#2563eb;color:#fff;font-weight:800;cursor:pointer}
-button.sub{background:#eef2ff;color:#1d4ed8}button.dark{background:#111827}button.red{background:#fee2e2;color:#dc2626}.rankMain{font-size:20px;padding:15px 34px;min-width:240px;box-shadow:0 12px 28px rgba(17,24,39,.22)}
+button.sub{background:#eef2ff;color:#1d4ed8}button.dark{background:#111827}button.red{background:#fee2e2;color:#dc2626}.rankMain{
+  display:block;
+  width:100%;
+  max-width:none;
+  font-size:24px;
+  padding:18px 24px;
+  border-radius:18px;
+  letter-spacing:.06em;
+  background:linear-gradient(135deg,#111827,#2563eb,#7c3aed);
+  box-shadow:0 18px 36px rgba(37,99,235,.28);
+  position:relative;
+  overflow:hidden;
+}
+.rankMain::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(110deg,transparent 0%,rgba(255,255,255,.28) 45%,transparent 70%);
+  transform:translateX(-120%);
+  animation:shine 2.2s ease-in-out infinite;
+}
+.rankMain:hover{filter:brightness(1.08);transform:translateY(-1px)}
+@keyframes shine{0%{transform:translateX(-120%)}55%{transform:translateX(120%)}100%{transform:translateX(120%)}}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .event{border:1px solid #e5e7eb;border-radius:14px;padding:14px;margin-top:14px}.row{display:grid;grid-template-columns:150px repeat(4,1fr);gap:9px;align-items:end;border-top:1px solid #eee;padding:10px 0}.row:first-of-type{border-top:0}
 .name{font-weight:800;word-break:break-word}.note{color:#6b7280}.warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:12px;padding:10px;margin-top:10px}.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:10px;margin-top:10px;white-space:pre-line}.hidden{display:none!important}
@@ -295,15 +317,33 @@ function renderResults(c){
       return a.name.localeCompare(b.name, 'ja');
     });
 
-    return `<h3>${names[key]}</h3><div class="tableWrap"><table><thead><tr><th>名前</th><th>元記録</th><th>本点</th><th>ボーナス</th><th>種目合計</th><th>メモ</th></tr></thead><tbody>${eventRows.map((r,idx)=>{
+    return `<h3>${names[key]}</h3><div class="tableWrap"><table><thead><tr><th>名前</th><th>元記録</th><th>基礎点</th><th>記録差</th><th>予想ボーナス</th><th>種目合計</th><th>メモ</th></tr></thead><tbody>${eventRows.map((r,idx)=>{
       const e = r.events[key];
-      let raw = fmt(e.raw), memo = '';
-      if (key==='bowling'){ raw = `${fmt(e.g1,0)} / ${fmt(e.g2,0)} / ${fmt(e.g3,0)} = ${fmt(e.raw,0)}`; memo = `種目${idx+1}位 / 基礎${fmt(e.base)} + 差${fmt(e.diffBonus)}`; }
-      if (key==='wanko'){ memo = `種目${idx+1}位 / 基礎${fmt(e.base)} + 差${fmt(e.diffBonus)}`; }
-      if (key==='duel'){ raw = `${fmt(e.raw,0)}位`; memo = `種目${idx+1}位 / 順位点のみ`; }
-      if (key==='karaoke'){ raw = `平均${fmt(e.raw,2)} / 合計${fmt(e.totalScore,1)}`; memo = `種目${idx+1}位 / 基礎${fmt(e.base)} + 差${fmt(e.diffBonus)} / 予想${fmt(e.pred,1)} / 誤差${fmt(e.diff,1)}`; }
-      if (key==='darts'){ memo = `${e.type} / 種目${idx+1}位 / 基礎${fmt(e.base)} + 差${fmt(e.diffBonus)}`; }
-      return `<tr><td>${esc(r.name)}</td><td>${raw}</td><td>${fmt(e.rel)}</td><td>${fmt(e.bonus)}</td><td><b>${fmt(e.total)}</b></td><td>${esc(memo)}</td></tr>`;
+      let raw = fmt(e.raw), memo = '', base = e.base ?? e.rel, diff = e.diffBonus ?? 0, predictionBonus = 0;
+
+      if (key==='bowling'){
+        raw = `${fmt(e.g1,0)} / ${fmt(e.g2,0)} / ${fmt(e.g3,0)} = ${fmt(e.raw,0)}`;
+        memo = `種目${idx+1}位`;
+      }
+      if (key==='wanko'){
+        memo = `種目${idx+1}位`;
+      }
+      if (key==='duel'){
+        raw = `${fmt(e.raw,0)}位`;
+        base = e.rel;
+        diff = 0;
+        memo = `種目${idx+1}位 / 順位点のみ`;
+      }
+      if (key==='karaoke'){
+        raw = `平均${fmt(e.raw,2)} / 合計${fmt(e.totalScore,1)}`;
+        predictionBonus = e.bonus ?? 0;
+        memo = `種目${idx+1}位 / 予想${fmt(e.pred,1)} / 誤差${fmt(e.diff,1)}`;
+      }
+      if (key==='darts'){
+        memo = `${e.type} / 種目${idx+1}位`;
+      }
+
+      return `<tr><td>${esc(r.name)}</td><td>${raw}</td><td>${fmt(base)}</td><td>${fmt(diff)}</td><td>${fmt(predictionBonus)}</td><td><b>${fmt(e.total)}</b></td><td>${esc(memo)}</td></tr>`;
     }).join('')}</tbody></table></div>`;
   }).join('');
 }
