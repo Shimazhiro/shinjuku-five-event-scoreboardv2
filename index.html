@@ -49,41 +49,34 @@ button.sub{background:#eef2ff;color:#1d4ed8}button.dark{background:#111827}butto
 .printOnly{display:none}
 @media print{
   *{box-shadow:none!important;text-shadow:none!important}
-  html,body{background:#fff;color:#111827;width:297mm;min-height:210mm}
-  body{margin:0;zoom:.72}
+  html,body{background:#fff!important;color:#111827!important;width:297mm;min-height:210mm}
+  body{margin:0}
   main{max-width:none;width:100%;padding:0}
-  header,.card:first-of-type,#inputArea,#revealOverlay,#confettiLayer,.actions,.pdfBtn,.formula{display:none!important}
-  #resultArea{display:block!important;box-shadow:none;border:0;padding:0;margin:0;width:100%}
-  #resultArea h1{font-size:15pt;margin:0 0 2pt}
-  #resultArea h2{font-size:13pt;margin:0 0 4pt}
-  #resultArea h3{font-size:9.5pt;margin:5pt 0 2pt;break-after:avoid}
+  header,.card:first-of-type,#inputArea,#resultArea,#revealOverlay,#confettiLayer,.actions,.pdfBtn,.formula{display:none!important}
   .printOnly{display:block!important}
-  .printOnly p{font-size:7.5pt;margin:0 0 4pt}
-  .tableWrap{border:1px solid #cbd5e1;overflow:visible;break-inside:avoid;margin-bottom:4pt;border-radius:0}
-  table{min-width:0!important;width:100%!important;table-layout:fixed;font-size:6.4pt;line-height:1.12}
-  th,td{padding:2pt 2.2pt!important;white-space:normal!important;word-break:break-word;border-bottom:1px solid #e5e7eb}
-  th{font-size:6.2pt}
-  tr.r1 td,tr.r2 td,tr.r3 td{background:#fff!important}
-  .scoreCell{align-items:flex-end;gap:0}
-  .scoreCell b{font-size:7pt}
-  .rawScore{font-size:5.7pt;color:#555}
-  #overall table th:nth-child(1),#overall table td:nth-child(1){width:5%}
-  #overall table th:nth-child(2),#overall table td:nth-child(2){width:10%}
-  #overall table th:nth-child(3),#overall table td:nth-child(3),
-  #overall table th:nth-child(4),#overall table td:nth-child(4),
-  #overall table th:nth-child(5),#overall table td:nth-child(5),
-  #overall table th:nth-child(6),#overall table td:nth-child(6),
-  #overall table th:nth-child(7),#overall table td:nth-child(7){width:13%}
-  #overall table th:nth-child(8),#overall table td:nth-child(8){width:8%}
-  #details table th:nth-child(1),#details table td:nth-child(1){width:6%}
-  #details table th:nth-child(2),#details table td:nth-child(2){width:10%}
-  #details table th:nth-child(3),#details table td:nth-child(3){width:21%}
-  #details table th:nth-child(4),#details table td:nth-child(4){width:8%}
-  #details table th:nth-child(5),#details table td:nth-child(5){width:8%}
-  #details table th:nth-child(6),#details table td:nth-child(6){width:9%}
-  #details table th:nth-child(7),#details table td:nth-child(7){width:11%}
-  #details table th:nth-child(8),#details table td:nth-child(8){width:27%}
-  @page{size:A4 landscape;margin:5mm}
+  #printReport{display:block!important;width:100%;box-sizing:border-box;padding:0}
+  .printTitle{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.5pt solid #111827;padding-bottom:4pt;margin-bottom:5pt}
+  .printTitle h1{font-size:18pt;margin:0;letter-spacing:.02em}
+  .printTitle p{font-size:8pt;margin:0;color:#4b5563}
+  .printSectionTitle{font-size:11pt;font-weight:900;margin:5pt 0 3pt}
+  .printGrid{display:grid;grid-template-columns:1fr 1fr;gap:5pt 7pt}
+  .printBlock{break-inside:avoid;border:1px solid #cbd5e1;border-radius:4pt;padding:3.5pt;background:#fff}
+  .printBlock h2{font-size:10pt;margin:0 0 2.5pt;padding-bottom:1.5pt;border-bottom:1px solid #e5e7eb}
+  .printTable{width:100%;border-collapse:collapse;table-layout:fixed;font-size:7.2pt;line-height:1.18}
+  .printTable th,.printTable td{border-bottom:1px solid #e5e7eb;padding:2.2pt 2.4pt;vertical-align:top;white-space:normal;word-break:break-word}
+  .printTable th{background:#f3f4f6;font-weight:900;color:#374151}
+  .printTable tr:last-child td{border-bottom:0}
+  .printTable .left{text-align:left}
+  .printTable .right{text-align:right}
+  .printOverall{margin-bottom:5pt}
+  .printOverall .printTable{font-size:7.8pt}
+  .printOverall th,.printOverall td{padding:2.6pt 3pt}
+  .printRank{font-weight:900}
+  .printName{font-weight:800}
+  .printNote{font-size:6.4pt;color:#4b5563}
+  .printSmall{font-size:6.4pt;color:#4b5563;display:block;line-height:1.1;margin-top:1pt}
+  .printFooter{margin-top:4pt;font-size:6.5pt;color:#6b7280;border-top:1px solid #e5e7eb;padding-top:2pt}
+  @page{size:A4 landscape;margin:7mm}
 }
 
 @keyframes shine{0%{transform:translateX(-120%)}55%{transform:translateX(120%)}100%{transform:translateX(120%)}}
@@ -158,6 +151,9 @@ button.sub{background:#eef2ff;color:#1d4ed8}button.dark{background:#111827}butto
     </div>
   </div>
 </div>
+
+
+<section id="printReport" class="printReport printOnly"></section>
 
 </main>
 
@@ -576,17 +572,127 @@ function fillSampleScores(){
 }
 
 
+
+function printEsc(str){
+  return String(str ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function buildPrintReport(){
+  const calc = collect();
+  if (calc.errors && calc.errors.length) {
+    showErrors(calc.errors);
+    return false;
+  }
+
+  const d = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const dateText = `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())} 出力`;
+  const eventNames = { bowling:'ボウリング', wanko:'わんこそば', duel:'デュエマ', karaoke:'カラオケ', darts:'ダーツ' };
+
+  const overallRows = calc.rows.map(r => `
+    <tr>
+      <td class="right printRank">${r.rank}位</td>
+      <td class="left printName">${printEsc(r.name)}</td>
+      <td class="right">${fmt(r.events.bowling.total)}<span class="printSmall">合計${fmt(r.events.bowling.raw,0)}</span></td>
+      <td class="right">${fmt(r.events.wanko.total)}<span class="printSmall">${fmt(r.events.wanko.raw,0)}杯</span></td>
+      <td class="right">${fmt(r.events.duel.total)}<span class="printSmall">${fmt(r.events.duel.raw,0)}位</span></td>
+      <td class="right">${fmt(r.events.karaoke.total)}<span class="printSmall">合計${fmt(r.events.karaoke.totalScore,1)} / 誤差${fmt(r.events.karaoke.diff,1)}</span></td>
+      <td class="right">${fmt(r.events.darts.total)}<span class="printSmall">${fmt(r.events.darts.raw,0)}</span></td>
+      <td class="right"><b>${fmt(r.total)}</b></td>
+    </tr>
+  `).join('');
+
+  const overall = `
+    <div class="printBlock printOverall">
+      <h2>総合ランキング</h2>
+      <table class="printTable">
+        <thead>
+          <tr>
+            <th class="right" style="width:6%">順位</th>
+            <th class="left" style="width:12%">名前</th>
+            <th class="right">ボウリング</th>
+            <th class="right">わんこ</th>
+            <th class="right">デュエマ</th>
+            <th class="right">カラオケ</th>
+            <th class="right">ダーツ</th>
+            <th class="right" style="width:9%">総合</th>
+          </tr>
+        </thead>
+        <tbody>${overallRows}</tbody>
+      </table>
+    </div>
+  `;
+
+  function sortedEventRows(key){
+    return [...calc.rows].sort((a,b)=>{
+      const ea = a.events[key], eb = b.events[key];
+      if (eb.total !== ea.total) return eb.total - ea.total;
+      if ((eb.raw ?? 0) !== (ea.raw ?? 0)) return (eb.raw ?? 0) - (ea.raw ?? 0);
+      return a.name.localeCompare(b.name, 'ja');
+    });
+  }
+
+  function rawText(key, e){
+    if (key === 'bowling') return `${fmt(e.g1,0)}/${fmt(e.g2,0)}/${fmt(e.g3,0)}=${fmt(e.raw,0)}`;
+    if (key === 'wanko') return `${fmt(e.raw,0)}杯`;
+    if (key === 'duel') return `${fmt(e.raw,0)}位`;
+    if (key === 'karaoke') return `平均${fmt(e.raw,2)} / 合計${fmt(e.totalScore,1)}`;
+    if (key === 'darts') return `${e.type} ${fmt(e.raw,0)}`;
+    return fmt(e.raw);
+  }
+
+  function detailText(key, e){
+    if (key === 'duel') return '順位点のみ';
+    if (key === 'karaoke') return `基礎${fmt(e.base)} + 差${fmt(e.diffBonus)} + 予想${fmt(e.bonus ?? 0)} / 誤差${fmt(e.diff,1)}`;
+    return `基礎${fmt(e.base)} + 差${fmt(e.diffBonus)}`;
+  }
+
+  const detailBlocks = Object.keys(eventNames).map(key => {
+    const rows = sortedEventRows(key).map((r, idx) => {
+      const e = r.events[key];
+      return `
+        <tr>
+          <td class="right printRank" style="width:9%">${idx+1}位</td>
+          <td class="left printName" style="width:17%">${printEsc(r.name)}</td>
+          <td class="left" style="width:30%">${printEsc(rawText(key,e))}</td>
+          <td class="right" style="width:12%">${fmt(e.total)}</td>
+          <td class="left printNote">${printEsc(detailText(key,e))}</td>
+        </tr>
+      `;
+    }).join('');
+
+    return `
+      <div class="printBlock">
+        <h2>${eventNames[key]}</h2>
+        <table class="printTable">
+          <thead><tr><th class="right">順位</th><th class="left">名前</th><th class="left">記録</th><th class="right">点</th><th class="left">内訳</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }).join('');
+
+  $('printReport').innerHTML = `
+    <div class="printTitle">
+      <h1>5種目 総合ランキング</h1>
+      <p>${dateText}</p>
+    </div>
+    ${overall}
+    <div class="printSectionTitle">種目別ランキング</div>
+    <div class="printGrid">${detailBlocks}</div>
+    <div class="printFooter">採点方式：ボウリング・わんこそば・カラオケ・ダーツは「順位点 + 記録差ボーナス」。デュエマは順位点のみ。カラオケ予想ボーナスは誤差最小者に+20点。</div>
+  `;
+  return true;
+}
+
 function outputPdf(){
   const resultArea = $('resultArea');
   if (!resultArea || resultArea.classList.contains('hidden')) {
     alert('先にランキングを表示してください。');
     return;
   }
-  const d = new Date();
-  const pad = n => String(n).padStart(2,'0');
-  const dateText = `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())} 出力`;
-  if ($('printDate')) $('printDate').textContent = dateText;
-  setTimeout(() => window.print(), 100);
+  if (!buildPrintReport()) return;
+  setTimeout(() => window.print(), 120);
 }
 
 
