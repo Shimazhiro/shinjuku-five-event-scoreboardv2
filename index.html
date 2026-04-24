@@ -18,7 +18,7 @@ button.sub{background:#eef2ff;color:#1d4ed8}button.dark{background:#111827}butto
 .event{border:1px solid #e5e7eb;border-radius:14px;padding:14px;margin-top:14px}.row{display:grid;grid-template-columns:150px repeat(4,1fr);gap:9px;align-items:end;border-top:1px solid #eee;padding:10px 0}.row:first-of-type{border-top:0}
 .name{font-weight:800;word-break:break-word}.note{color:#6b7280}.warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:12px;padding:10px;margin-top:10px}.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:10px;margin-top:10px;white-space:pre-line}.hidden{display:none!important}
 .tableWrap{overflow-x:auto;border:1px solid #e5e7eb;border-radius:14px;margin-top:10px}table{border-collapse:collapse;width:100%;min-width:840px;background:#fff}th,td{border-bottom:1px solid #e5e7eb;padding:9px 10px;text-align:right;white-space:nowrap}th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}th{background:#f9fafb;color:#4b5563;font-size:13px}tr.r1 td{background:#fffbeb;font-weight:800}tr.r2 td{background:#f8fafc}tr.r3 td{background:#fff7ed}.formula{font-family:ui-monospace,Consolas,monospace;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:10px;overflow-x:auto}.scoreCell{display:flex;flex-direction:column;align-items:flex-end;gap:2px}.scoreCell b{font-size:15px}.rawScore{font-size:12px;color:#6b7280;font-weight:500}
-@media(max-width:900px){.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr}table{min-width:760px}}
+.revealOverlay{position:fixed;inset:0;background:rgba(17,24,39,.58);display:flex;align-items:center;justify-content:center;padding:18px;z-index:9999}.revealBox{width:min(520px,100%);background:#fff;border-radius:22px;box-shadow:0 24px 70px #0005;padding:24px;text-align:center}.revealBox h2{font-size:26px;margin-bottom:8px}.revealName{font-size:clamp(34px,8vw,58px);font-weight:900;letter-spacing:.02em;margin:16px 0}.revealRank{display:inline-block;background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:999px;padding:6px 14px;font-weight:900}.revealScore{color:#6b7280;margin-top:6px}.revealChoices{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}.pulse{animation:pulse .9s ease-in-out infinite alternate}@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.03)}}.confettiLayer{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:10000}.confetti{position:absolute;width:9px;height:14px;border-radius:2px;opacity:.95;animation:confettiBurst 1.45s ease-out forwards}@keyframes confettiBurst{0%{transform:translate(0,0) rotate(0deg) scale(1);opacity:1}78%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--rot)) scale(.8);opacity:0}}.crackerFlash{animation:crackerFlash .38s ease-out}@keyframes crackerFlash{0%{box-shadow:0 0 0 rgba(250,204,21,0)}40%{box-shadow:0 0 0 10px rgba(250,204,21,.22)}100%{box-shadow:0 24px 70px #0005}}@media(max-width:900px){.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr}table{min-width:760px}}
 </style>
 </head>
 <body>
@@ -39,12 +39,7 @@ button.sub{background:#eef2ff;color:#1d4ed8}button.dark{background:#111827}butto
 </section>
 
 <section class="card hidden" id="inputArea">
-<h2>2. ルール設定</h2>
-<div class="grid">
-<div><label>カラオケ予想ボーナス</label><input id="karaokeBonus" type="number" min="0" step="1" value="20"><small class="note">3曲合計の予想誤差が一番小さい人に加点</small></div>
-</div>
-<div class="warn">各種目は「1位100点・最下位40点・中間は差で按分」です。デュエマは順位のみで点数化します。カラオケ予想ボーナスは、予想誤差が一番小さい人に加算します。</div>
-<h2 style="margin-top:22px">3. 記録入力</h2>
+<h2>2. 記録入力</h2>
 <div id="events"></div>
 <div class="actions">
 <button class="dark" id="rankBtn">ランキングを表示</button>
@@ -62,6 +57,30 @@ button.sub{background:#eef2ff;color:#1d4ed8}button.dark{background:#111827}butto
 <h2 style="margin-top:22px">採点式</h2>
 <div class="formula">相対スコア = 40 + 60 × (自分の記録 - 最下位の記録) ÷ (1位の記録 - 最下位の記録)<br>デュエマ順位点 = 1位100点、最下位40点、中間順位は等間隔<br>カラオケ予想ボーナス = 予想誤差が一番小さい人に+20点</div>
 </section>
+
+<div id="confettiLayer" class="confettiLayer"></div>
+<div id="revealOverlay" class="revealOverlay hidden">
+  <div class="revealBox">
+    <div id="revealStart">
+      <h2>発表順を選択</h2>
+      <p class="note">どちらの順番でランキングを確認しますか？</p>
+      <div class="revealChoices">
+        <button type="button" id="revealFromTop">1位から発表</button>
+        <button type="button" class="dark" id="revealFromBottom">最下位から発表</button>
+      </div>
+    </div>
+    <div id="revealStep" class="hidden">
+      <span id="revealRank" class="revealRank"></span>
+      <div id="revealName" class="revealName pulse"></div>
+      <div id="revealScore" class="revealScore"></div>
+      <div class="revealChoices">
+        <button type="button" id="revealNext">OK</button>
+        <button type="button" class="sub" id="revealSkip">一覧を見る</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </main>
 
 <script>
@@ -107,7 +126,7 @@ function render(){
   html += eventBlock('わんこそば', '制限時間40分で食べた杯数を入力', members.map((m,i)=>`
     <div class="row"><div class="name">${esc(m)}</div><div><label>杯数</label><input id="${makeId('wanko',i,'bowls')}" type="number" min="0" step="1"></div></div>`).join(''));
 
-  html += eventBlock('デュエマ', '順位のみを入力してください。順位に応じて点数を振り分けます。', members.map((m,i)=>`
+  html += eventBlock('デュエマ', '順位を入力。順位に応じて点数を振り分けます。', members.map((m,i)=>`
     <div class="row">
       <div class="name">${esc(m)}</div>
       <div><label>順位</label><input id="${makeId('duel',i,'rank')}" type="number" min="1" step="1"></div>
@@ -145,7 +164,7 @@ function applyMembers(save=true){
 
 function collect(){
   const errors = [];
-  const kb = getNum('karaokeBonus') ?? 20;
+  const kb = 20;
   if (members.length < 2) errors.push('メンバーは2人以上入力してください。');
 
   const raw = { b:[], w:[], du:[], k:[], d:[] };
@@ -254,7 +273,7 @@ function renderResults(c){
 function saveData(){
   const data = {
     names: $('names').value,
-    settings: { karaokeBonus: $('karaokeBonus')?.value },
+    settings: {},
     inputs: {}
   };
   document.querySelectorAll('input[id],select[id]').forEach(el=>{ if (el.id) data.inputs[el.id] = el.value; });
@@ -274,10 +293,97 @@ function restore(){
   } catch(e) {}
 }
 
+
+let latestRankingRows = [];
+let revealQueue = [];
+let revealIndex = 0;
+
+
+const confettiColors = ['#facc15','#fb7185','#60a5fa','#34d399','#a78bfa','#f97316','#22d3ee'];
+
+function fireConfetti(){
+  const layer = $('confettiLayer');
+  if (!layer) return;
+  layer.innerHTML = '';
+  const pieces = 92;
+  for (let i = 0; i < pieces; i++) {
+    const piece = document.createElement('span');
+    piece.className = 'confetti';
+    const fromLeft = i % 2 === 0;
+    const startX = fromLeft ? 10 + Math.random() * 18 : 72 + Math.random() * 18;
+    const startY = 58 + Math.random() * 18;
+    const dx = (fromLeft ? 1 : -1) * (120 + Math.random() * 520);
+    const dy = -260 - Math.random() * 360 + Math.random() * 520;
+    piece.style.left = startX + 'vw';
+    piece.style.top = startY + 'vh';
+    piece.style.background = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+    piece.style.setProperty('--dx', dx + 'px');
+    piece.style.setProperty('--dy', dy + 'px');
+    piece.style.setProperty('--rot', (360 + Math.random() * 1080) + 'deg');
+    piece.style.animationDelay = (Math.random() * 0.16) + 's';
+    piece.style.transform = `rotate(${Math.random() * 180}deg)`;
+    layer.appendChild(piece);
+  }
+  const box = document.querySelector('.revealBox');
+  if (box) {
+    box.classList.remove('crackerFlash');
+    void box.offsetWidth;
+    box.classList.add('crackerFlash');
+  }
+  setTimeout(() => { layer.innerHTML = ''; }, 1900);
+}
+
+function openRevealChoice(rows){
+  latestRankingRows = rows;
+  $('revealStart').classList.remove('hidden');
+  $('revealStep').classList.add('hidden');
+  $('revealOverlay').classList.remove('hidden');
+}
+
+function startReveal(order){
+  revealQueue = [...latestRankingRows];
+  if (order === 'bottom') {
+    revealQueue.sort((a,b)=>b.rank-a.rank || a.total-b.total);
+  } else {
+    revealQueue.sort((a,b)=>a.rank-b.rank || b.total-a.total);
+  }
+  revealIndex = 0;
+  $('revealStart').classList.add('hidden');
+  $('revealStep').classList.remove('hidden');
+  showRevealCurrent();
+}
+
+function showRevealCurrent(){
+  if (revealIndex >= revealQueue.length) {
+    closeReveal();
+    $('resultArea').classList.remove('hidden');
+    $('resultArea').scrollIntoView({behavior:'smooth'});
+    return;
+  }
+  const r = revealQueue[revealIndex];
+  $('revealRank').textContent = `${r.rank}位`;
+  $('revealName').textContent = r.name;
+  $('revealScore').textContent = `総合 ${fmt(r.total)}点`;
+  $('revealNext').textContent = revealIndex === revealQueue.length - 1 ? '結果一覧を見る' : 'OK';
+  if (r.rank === 1) fireConfetti();
+}
+
+function closeReveal(){
+  $('revealOverlay').classList.add('hidden');
+}
+
+
 $('setMembers').onclick = () => applyMembers(true);
 $('sample').onclick = () => { $('names').value = '佐藤\n鈴木\n田中\n山田\n高橋'; applyMembers(true); };
 $('clear').onclick = () => { if (confirm('入力内容をすべて削除しますか？')) { localStorage.removeItem(KEY); location.reload(); } };
-$('rankBtn').onclick = () => { saveData(); const c = collect(); if (c.errors.length) { showErrors(c.errors); $('resultArea').classList.add('hidden'); return; } showErrors([]); renderResults(c); $('resultArea').classList.remove('hidden'); $('resultArea').scrollIntoView({behavior:'smooth'}); };
+$('rankBtn').onclick = () => { saveData(); const c = collect(); if (c.errors.length) { showErrors(c.errors); $('resultArea').classList.add('hidden'); return; } showErrors([]); renderResults(c); $('resultArea').classList.add('hidden'); openRevealChoice(c.rows); };
+
+$('revealFromTop').onclick = () => startReveal('top');
+$('revealFromBottom').onclick = () => startReveal('bottom');
+$('revealNext').onclick = () => { revealIndex += 1; showRevealCurrent(); };
+$('revealSkip').onclick = () => { closeReveal(); $('resultArea').classList.remove('hidden'); $('resultArea').scrollIntoView({behavior:'smooth'}); };
+$('revealOverlay').addEventListener('click', e => { if (e.target.id === 'revealOverlay') closeReveal(); });
+
 $('hideBtn').onclick = () => $('resultArea').classList.add('hidden');
 $('saveBtn').onclick = () => { saveData(); alert('保存しました。このブラウザ内で次回も復元できます。'); };
 
