@@ -35,6 +35,35 @@ button.sub{background:#eef2ff;color:#1d4ed8}button.dark{background:#111827}butto
   animation:shine 2.2s ease-in-out infinite;
 }
 .rankMain:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.pdfBtn{
+  background:#0f766e;
+  box-shadow:0 10px 22px rgba(15,118,110,.22);
+}
+.resultHead{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.printOnly{display:none}
+@media print{
+  body{background:#fff;color:#111827}
+  main{max-width:none;padding:0}
+  header,.card:first-of-type,#inputArea,#revealOverlay,#confettiLayer,.actions,.pdfBtn,.formula{display:none!important}
+  #resultArea{display:block!important;box-shadow:none;border:0;padding:0;margin:0}
+  #resultArea h2{font-size:18pt;margin:0 0 10pt}
+  #resultArea h3{font-size:14pt;margin:16pt 0 6pt;break-after:avoid}
+  .printOnly{display:block!important}
+  .tableWrap{border:1px solid #d1d5db;overflow:visible;break-inside:avoid;margin-bottom:12pt}
+  table{min-width:0;width:100%;font-size:9pt}
+  th,td{padding:5pt 6pt;white-space:normal}
+  tr.r1 td,tr.r2 td,tr.r3 td{background:#fff!important}
+  .scoreCell{align-items:flex-end}
+  .rawScore{font-size:8pt;color:#555}
+  @page{size:A4 landscape;margin:10mm}
+}
+
 @keyframes shine{0%{transform:translateX(-120%)}55%{transform:translateX(120%)}100%{transform:translateX(120%)}}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .event{border:1px solid #e5e7eb;border-radius:14px;padding:14px;margin-top:14px}.row{display:grid;grid-template-columns:150px repeat(4,1fr);gap:9px;align-items:end;border-top:1px solid #eee;padding:10px 0}.row:first-of-type{border-top:0}
@@ -70,7 +99,14 @@ button.sub{background:#eef2ff;color:#1d4ed8}button.dark{background:#111827}butto
 </section>
 
 <section class="card hidden" id="resultArea">
-<h2>総合ランキング</h2>
+<div class="resultHead">
+  <h2>総合ランキング</h2>
+  <button type="button" id="pdfBtn" class="pdfBtn">PDFに出力</button>
+</div>
+<div class="printOnly">
+  <h1>5種目 総合ランキング</h1>
+  <p id="printDate" class="note"></p>
+</div>
 <div id="overall"></div>
 <h2 style="margin-top:22px">種目別詳細</h2>
 <div id="details"></div>
@@ -517,11 +553,27 @@ function fillSampleScores(){
   });
 }
 
+
+function outputPdf(){
+  const resultArea = $('resultArea');
+  if (!resultArea || resultArea.classList.contains('hidden')) {
+    alert('先にランキングを表示してください。');
+    return;
+  }
+  const d = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const dateText = `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())} 出力`;
+  if ($('printDate')) $('printDate').textContent = dateText;
+  window.print();
+}
+
+
 $('setMembers').onclick = () => applyMembers(true);
 $('sample').onclick = () => { $('names').value = '佐藤\n鈴木\n田中\n山田\n高橋'; applyMembers(false); fillSampleScores(); saveData(); };
 $('clear').onclick = () => { if (confirm('入力内容をすべて削除しますか？')) { localStorage.removeItem(KEY); location.reload(); } };
 $('rankBtn').onclick = () => { saveData(); const c = collect(); if (c.errors.length) { showErrors(c.errors); $('resultArea').classList.add('hidden'); return; } showErrors([]); renderResults(c); $('resultArea').classList.add('hidden'); openRevealChoice(c.rows); };
 
+$('pdfBtn').onclick = outputPdf;
 $('revealFromTop').onclick = () => startReveal('top');
 $('revealFromBottom').onclick = () => startReveal('bottom');
 $('revealNext').onclick = () => { revealIndex += 1; showRevealCurrent(); };
