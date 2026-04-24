@@ -287,14 +287,22 @@ function renderResults(c){
 
   const names = { bowling:'ボウリング', wanko:'わんこそば', duel:'デュエマ', karaoke:'カラオケ', darts:'ダーツ' };
   $('details').innerHTML = Object.keys(names).map(key=>{
-    return `<h3>${names[key]}</h3><div class="tableWrap"><table><thead><tr><th>名前</th><th>元記録</th><th>本点</th><th>ボーナス</th><th>種目合計</th><th>メモ</th></tr></thead><tbody>${c.rows.map(r=>{
+    const eventRows = [...c.rows].sort((a,b)=>{
+      const ea = a.events[key];
+      const eb = b.events[key];
+      if (eb.total !== ea.total) return eb.total - ea.total;
+      if ((eb.raw ?? 0) !== (ea.raw ?? 0)) return (eb.raw ?? 0) - (ea.raw ?? 0);
+      return a.name.localeCompare(b.name, 'ja');
+    });
+
+    return `<h3>${names[key]}</h3><div class="tableWrap"><table><thead><tr><th>名前</th><th>元記録</th><th>本点</th><th>ボーナス</th><th>種目合計</th><th>メモ</th></tr></thead><tbody>${eventRows.map((r,idx)=>{
       const e = r.events[key];
       let raw = fmt(e.raw), memo = '';
-      if (key==='bowling'){ raw = `${fmt(e.g1,0)} / ${fmt(e.g2,0)} / ${fmt(e.g3,0)} = ${fmt(e.raw,0)}`; memo = `順位${fmt(e.rank,0)}位 / 基礎${fmt(e.base)} + 差${fmt(e.diffBonus)}`; }
-      if (key==='wanko'){ memo = `順位${fmt(e.rank,0)}位 / 基礎${fmt(e.base)} + 差${fmt(e.diffBonus)}`; }
-      if (key==='duel'){ raw = `${fmt(e.raw,0)}位`; memo = '順位点のみ'; }
-      if (key==='karaoke'){ raw = `平均${fmt(e.raw,2)} / 合計${fmt(e.totalScore,1)}`; memo = `予想${fmt(e.pred,1)} / 差${fmt(e.diff,1)}`; }
-      if (key==='darts'){ memo = `${e.type} / 順位${fmt(e.rank,0)}位 / 基礎${fmt(e.base)} + 差${fmt(e.diffBonus)}`; }
+      if (key==='bowling'){ raw = `${fmt(e.g1,0)} / ${fmt(e.g2,0)} / ${fmt(e.g3,0)} = ${fmt(e.raw,0)}`; memo = `種目${idx+1}位 / 基礎${fmt(e.base)} + 差${fmt(e.diffBonus)}`; }
+      if (key==='wanko'){ memo = `種目${idx+1}位 / 基礎${fmt(e.base)} + 差${fmt(e.diffBonus)}`; }
+      if (key==='duel'){ raw = `${fmt(e.raw,0)}位`; memo = `種目${idx+1}位 / 順位点のみ`; }
+      if (key==='karaoke'){ raw = `平均${fmt(e.raw,2)} / 合計${fmt(e.totalScore,1)}`; memo = `種目${idx+1}位 / 基礎${fmt(e.base)} + 差${fmt(e.diffBonus)} / 予想${fmt(e.pred,1)} / 誤差${fmt(e.diff,1)}`; }
+      if (key==='darts'){ memo = `${e.type} / 種目${idx+1}位 / 基礎${fmt(e.base)} + 差${fmt(e.diffBonus)}`; }
       return `<tr><td>${esc(r.name)}</td><td>${raw}</td><td>${fmt(e.rel)}</td><td>${fmt(e.bonus)}</td><td><b>${fmt(e.total)}</b></td><td>${esc(memo)}</td></tr>`;
     }).join('')}</tbody></table></div>`;
   }).join('');
