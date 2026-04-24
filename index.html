@@ -6,39 +6,19 @@
 <title>5種目 総合スコアボード</title>
 <style>
 body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f6f7fb;color:#111827;margin:0;line-height:1.6}
-main{max-width:1100px;margin:auto;padding:24px 14px 50px}
+main{max-width:1120px;margin:auto;padding:24px 14px 50px}
 h1{font-size:clamp(26px,4vw,44px);margin:0 0 8px}
-h2{margin:0 0 12px;font-size:22px}
-.card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;box-shadow:0 10px 24px #0001;padding:18px;margin:16px 0}
-label{display:block;font-weight:700;font-size:14px;margin-bottom:5px}
-input,textarea,select,button{font:inherit}
+h2{margin:0 0 12px;font-size:22px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;box-shadow:0 10px 24px #0001;padding:18px;margin:16px 0}
+label{display:block;font-weight:700;font-size:14px;margin-bottom:5px}input,textarea,select,button{font:inherit}
 input,textarea,select{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:10px;padding:9px;background:#fff}
-textarea{min-height:120px}
+input[readonly]{background:#f9fafb}textarea{min-height:120px}
 button{border:0;border-radius:999px;padding:10px 18px;background:#2563eb;color:#fff;font-weight:800;cursor:pointer}
-button.sub{background:#eef2ff;color:#1d4ed8}
-button.dark{background:#111827}
-button.red{background:#fee2e2;color:#dc2626}
-.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.event{border:1px solid #e5e7eb;border-radius:14px;padding:14px;margin-top:14px}
-.row{display:grid;grid-template-columns:150px repeat(4,1fr);gap:9px;align-items:end;border-top:1px solid #eee;padding:10px 0}
-.row:first-of-type{border-top:0}
-.name{font-weight:800;word-break:break-word}
-.note{color:#6b7280}
-.warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:12px;padding:10px;margin-top:10px}
-.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:10px;margin-top:10px;white-space:pre-line}
-.hidden{display:none!important}
-.tableWrap{overflow-x:auto;border:1px solid #e5e7eb;border-radius:14px;margin-top:10px}
-table{border-collapse:collapse;width:100%;min-width:820px;background:#fff}
-th,td{border-bottom:1px solid #e5e7eb;padding:9px 10px;text-align:right;white-space:nowrap}
-th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
-th{background:#f9fafb;color:#4b5563;font-size:13px}
-tr.r1 td{background:#fffbeb;font-weight:800}
-tr.r2 td{background:#f8fafc}
-tr.r3 td{background:#fff7ed}
-.pill{display:inline-block;background:#eef2ff;color:#1d4ed8;border-radius:999px;padding:2px 8px;font-size:12px;font-weight:800}
-.formula{font-family:ui-monospace,Consolas,monospace;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:10px;overflow-x:auto}
-@media(max-width:850px){.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr}table{min-width:760px}}
+button.sub{background:#eef2ff;color:#1d4ed8}button.dark{background:#111827}button.red{background:#fee2e2;color:#dc2626}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.event{border:1px solid #e5e7eb;border-radius:14px;padding:14px;margin-top:14px}.row{display:grid;grid-template-columns:150px repeat(4,1fr);gap:9px;align-items:end;border-top:1px solid #eee;padding:10px 0}.row:first-of-type{border-top:0}
+.name{font-weight:800;word-break:break-word}.note{color:#6b7280}.warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:12px;padding:10px;margin-top:10px}.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:10px;margin-top:10px;white-space:pre-line}.hidden{display:none!important}
+.tableWrap{overflow-x:auto;border:1px solid #e5e7eb;border-radius:14px;margin-top:10px}table{border-collapse:collapse;width:100%;min-width:840px;background:#fff}th,td{border-bottom:1px solid #e5e7eb;padding:9px 10px;text-align:right;white-space:nowrap}th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}th{background:#f9fafb;color:#4b5563;font-size:13px}tr.r1 td{background:#fffbeb;font-weight:800}tr.r2 td{background:#f8fafc}tr.r3 td{background:#fff7ed}.formula{font-family:ui-monospace,Consolas,monospace;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:10px;overflow-x:auto}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr}table{min-width:760px}}
 </style>
 </head>
 <body>
@@ -89,109 +69,216 @@ tr.r3 td{background:#fff7ed}
 </main>
 
 <script>
-const KEY="five_event_scoreboard_v4";
-let members=[];
-const $=id=>document.getElementById(id);
-const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const id=(e,i,f)=>`${e}_${i}_${f}`;
-const n=id=>{const x=$(id); if(!x||x.value==="")return null; const v=Number(x.value); return Number.isFinite(v)?v:null};
-const f=(v,d=1)=>v==null||Number.isNaN(v)?"-":Number(v).toFixed(d).replace(/\.0$/,"");
-function rel(vals,tie){const max=Math.max(...vals),min=Math.min(...vals);return max===min?vals.map(_=>tie):vals.map(v=>40+60*((v-min)/(max-min)))}
-function rankPt(rank,c){return c<=1?100:100-(rank-1)*(60/(c-1))}
-function parseNames(){return $("names").value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean)}
-function err(list){$("errors").textContent=list.join("\n");$("errors").classList.toggle("hidden",!list.length)}
-function eventBlock(title,note,body){return `<div class="event"><h2>${title}</h2><p class="note">${note}</p>${body}</div>`}
+const KEY = 'five_event_scoreboard_v5';
+let members = [];
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const makeId = (e,i,f) => `${e}_${i}_${f}`;
+const getNum = id => {
+  const el = $(id);
+  if (!el || el.value === '') return null;
+  const v = Number(el.value);
+  return Number.isFinite(v) ? v : null;
+};
+const fmt = (v,d=1) => v == null || Number.isNaN(v) ? '-' : Number(v).toFixed(d).replace(/\.0$/,'');
+function rel(vals,tie){ const max=Math.max(...vals), min=Math.min(...vals); return max===min ? vals.map(()=>tie) : vals.map(v=>40+60*((v-min)/(max-min))); }
+function rankPt(rank,count){ return count<=1 ? 100 : 100-(rank-1)*(60/(count-1)); }
+function parseNames(){ return $('names').value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean); }
+function showErrors(list){ $('errors').textContent = list.join('\n'); $('errors').classList.toggle('hidden', !list.length); }
+function eventBlock(title,note,body){ return `<div class="event"><h2>${title}</h2><p class="note">${note}</p>${body}</div>`; }
+
+function updateBowlingTotal(i){
+  const g1 = getNum(makeId('bowling', i, 'g1')) ?? 0;
+  const g2 = getNum(makeId('bowling', i, 'g2')) ?? 0;
+  const g3 = getNum(makeId('bowling', i, 'g3')) ?? 0;
+  const totalEl = $(makeId('bowling', i, 'total'));
+  if (totalEl) totalEl.value = g1 + g2 + g3;
+}
+function updateAllBowlingTotals(){ members.forEach((_,i)=>updateBowlingTotal(i)); }
 
 function render(){
- const dm=$("duelMode").value;
- let html="";
- html+=eventBlock("ボウリング","3ゲーム合計スコアを入力",members.map((m,i)=>`<div class="row"><div class="name">${esc(m)}</div><div><label>3ゲーム合計</label><input id="${id("bowling",i,"score")}" type="number" min="0" step="1"></div></div>`).join(""));
- html+=eventBlock("わんこそば","制限時間40分で食べた杯数を入力",members.map((m,i)=>`<div class="row"><div class="name">${esc(m)}</div><div><label>杯数</label><input id="${id("wanko",i,"bowls")}" type="number" min="0" step="1"></div></div>`).join(""));
- html+=eventBlock("デュエマ","順位または勝利数に、合計シールド破壊枚数ボーナスを加算",members.map((m,i)=>`<div class="row"><div class="name">${esc(m)}</div><div><label>${dm==="rank"?"順位":"勝利数"}</label><input id="${id("duel",i,dm==="rank"?"rank":"wins")}" type="number" min="${dm==="rank"?1:0}" step="1"></div><div><label>合計シールド破壊枚数</label><input id="${id("duel",i,"shields")}" type="number" min="0" step="1"></div></div>`).join(""));
- html+=eventBlock("カラオケ","3曲の点数と、事前に予想した合計点を入力",members.map((m,i)=>`<div class="row"><div class="name">${esc(m)}</div><div><label>1曲目</label><input id="${id("karaoke",i,"s1")}" type="number" min="0" step="0.1"></div><div><label>2曲目</label><input id="${id("karaoke",i,"s2")}" type="number" min="0" step="0.1"></div><div><label>3曲目</label><input id="${id("karaoke",i,"s3")}" type="number" min="0" step="0.1"></div><div><label>予想合計</label><input id="${id("karaoke",i,"pred")}" type="number" min="0" step="0.1"></div></div>`).join(""));
- html+=eventBlock("ダーツ","各メンバーごとにCOUNT-UPまたはクリケットカウントアップを選択し、点数を入力",members.map((m,i)=>`
-  <div class="row">
-    <div class="name">${esc(m)}</div>
-    <div>
-      <label>種目</label>
-      <select id="${id("darts",i,"type")}">
-        <option value="COUNT-UP">COUNT-UP</option>
-        <option value="クリケットカウントアップ">クリケットカウントアップ</option>
-      </select>
-    </div>
-    <div><label>スコア</label><input id="${id("darts",i,"score")}" type="number" min="0" step="1"></div>
-  </div>`).join(""));
- $("events").innerHTML=html;
+  const dm = $('duelMode').value;
+  let html = '';
+
+  html += eventBlock('ボウリング', '1ゲームごとの点数を入力すると、合計が自動計算されます。', members.map((m,i)=>`
+    <div class="row">
+      <div class="name">${esc(m)}</div>
+      <div><label>1ゲーム目</label><input id="${makeId('bowling',i,'g1')}" type="number" min="0" step="1"></div>
+      <div><label>2ゲーム目</label><input id="${makeId('bowling',i,'g2')}" type="number" min="0" step="1"></div>
+      <div><label>3ゲーム目</label><input id="${makeId('bowling',i,'g3')}" type="number" min="0" step="1"></div>
+      <div><label>合計</label><input id="${makeId('bowling',i,'total')}" type="number" readonly></div>
+    </div>`).join(''));
+
+  html += eventBlock('わんこそば', '制限時間40分で食べた杯数を入力', members.map((m,i)=>`
+    <div class="row"><div class="name">${esc(m)}</div><div><label>杯数</label><input id="${makeId('wanko',i,'bowls')}" type="number" min="0" step="1"></div></div>`).join(''));
+
+  html += eventBlock('デュエマ', '順位または勝利数に、合計シールド破壊枚数ボーナスを加算', members.map((m,i)=>`
+    <div class="row">
+      <div class="name">${esc(m)}</div>
+      <div><label>${dm==='rank' ? '順位' : '勝利数'}</label><input id="${makeId('duel',i,dm==='rank'?'rank':'wins')}" type="number" min="${dm==='rank'?1:0}" step="1"></div>
+      <div><label>合計シールド破壊枚数</label><input id="${makeId('duel',i,'shields')}" type="number" min="0" step="1"></div>
+    </div>`).join(''));
+
+  html += eventBlock('カラオケ', '3曲の点数と、事前に予想した合計点を入力', members.map((m,i)=>`
+    <div class="row">
+      <div class="name">${esc(m)}</div>
+      <div><label>1曲目</label><input id="${makeId('karaoke',i,'s1')}" type="number" min="0" step="0.1"></div>
+      <div><label>2曲目</label><input id="${makeId('karaoke',i,'s2')}" type="number" min="0" step="0.1"></div>
+      <div><label>3曲目</label><input id="${makeId('karaoke',i,'s3')}" type="number" min="0" step="0.1"></div>
+      <div><label>予想合計</label><input id="${makeId('karaoke',i,'pred')}" type="number" min="0" step="0.1"></div>
+    </div>`).join(''));
+
+  html += eventBlock('ダーツ', '各メンバーごとにCOUNT-UPまたはクリケットカウントアップを選択し、点数を入力', members.map((m,i)=>`
+    <div class="row">
+      <div class="name">${esc(m)}</div>
+      <div><label>種目</label><select id="${makeId('darts',i,'type')}"><option value="COUNT-UP">COUNT-UP</option><option value="クリケットカウントアップ">クリケットカウントアップ</option></select></div>
+      <div><label>スコア</label><input id="${makeId('darts',i,'score')}" type="number" min="0" step="1"></div>
+    </div>`).join(''));
+
+  $('events').innerHTML = html;
+  updateAllBowlingTotals();
 }
 
 function applyMembers(save=true){
- members=parseNames();
- if(!members.length){err(["メンバー名を入力してください。"]);return}
- $("inputArea").classList.remove("hidden");$("resultArea").classList.add("hidden");err([]);
- render(); if(save)saveData();
+  members = parseNames();
+  if (!members.length){ showErrors(['メンバー名を入力してください。']); return; }
+  $('inputArea').classList.remove('hidden');
+  $('resultArea').classList.add('hidden');
+  showErrors([]);
+  render();
+  if (save) saveData();
 }
 
 function collect(){
- const errors=[], tie=n("tieScore")??70, sb=n("shieldBonus")??0, cap=n("shieldCap")??0, kb=n("karaokeBonus")??0, dm=$("duelMode").value;
- if(members.length<2)errors.push("メンバーは2人以上入力してください。");
- const raw={b:[],w:[],du:[],k:[],d:[]};
- members.forEach((m,i)=>{
-  const b=n(id("bowling",i,"score")); if(b==null)errors.push(`${m}：ボウリング未入力です。`); raw.b.push(b??0);
-  const w=n(id("wanko",i,"bowls")); if(w==null)errors.push(`${m}：わんこそば未入力です。`); raw.w.push(w??0);
-  const main=n(id("duel",i,dm==="rank"?"rank":"wins")), sh=n(id("duel",i,"shields"));
-  if(main==null)errors.push(`${m}：デュエマの${dm==="rank"?"順位":"勝利数"}が未入力です。`);
-  if(sh==null)errors.push(`${m}：シールド破壊枚数が未入力です。`);
-  if(dm==="rank"&&main!=null&&(main<1||main>members.length))errors.push(`${m}：デュエマ順位は1〜${members.length}で入力してください。`);
-  raw.du.push({main:main??0,sh:sh??0});
-  const s1=n(id("karaoke",i,"s1")),s2=n(id("karaoke",i,"s2")),s3=n(id("karaoke",i,"s3")),p=n(id("karaoke",i,"pred"));
-  if(s1==null)errors.push(`${m}：カラオケ1曲目未入力です。`); 
-  if(s2==null)errors.push(`${m}：カラオケ2曲目未入力です。`); 
-  if(s3==null)errors.push(`${m}：カラオケ3曲目未入力です。`); 
-  if(p==null)errors.push(`${m}：カラオケ予想合計未入力です。`);
-  const total=(s1??0)+(s2??0)+(s3??0); raw.k.push({avg:total/3,total,p:p??0});
-  const d=n(id("darts",i,"score"));
-  const type=$(id("darts",i,"type"))?.value || "COUNT-UP";
-  if(d==null)errors.push(`${m}：ダーツのスコアが未入力です。`);
-  raw.d.push({score:d??0,type});
- });
- if(errors.length)return{errors};
- const rows=members.map(name=>({name,total:0,events:{}}));
- function add(k,arr){arr.forEach((e,i)=>{rows[i].events[k]=e;rows[i].total+=e.total})}
- const br=rel(raw.b,tie); add("bowling",raw.b.map((v,i)=>({raw:v,rel:br[i],bonus:0,total:br[i]})));
- const wr=rel(raw.w,tie); add("wanko",raw.w.map((v,i)=>({raw:v,rel:wr[i],bonus:0,total:wr[i]})));
- const dr=dm==="rank"?raw.du.map(r=>rankPt(r.main,members.length)):rel(raw.du.map(r=>r.main),tie);
- add("duel",raw.du.map((r,i)=>{const bonus=Math.min(r.sh*sb,cap);return{raw:r.main,shields:r.sh,rel:dr[i],bonus,total:dr[i]+bonus}}));
- const kr=rel(raw.k.map(r=>r.avg),tie);
- add("karaoke",raw.k.map((r,i)=>{const diff=Math.abs(r.total-r.p),bonus=diff<=3?kb:0;return{raw:r.avg,totalScore:r.total,pred:r.p,diff,rel:kr[i],bonus,total:kr[i]+bonus}}));
- const dar=rel(raw.d.map(r=>r.score),tie); add("darts",raw.d.map((r,i)=>({raw:r.score,type:r.type,rel:dar[i],bonus:0,total:dar[i]})));
- rows.sort((a,b)=>b.total-a.total); let prev=null,pr=0; rows.forEach((r,i)=>{r.rank=r.total===prev?pr:i+1;prev=r.total;pr=r.rank});
- return{errors:[],rows,dm};
+  const errors = [];
+  const tie = getNum('tieScore') ?? 70;
+  const sb = getNum('shieldBonus') ?? 0;
+  const cap = getNum('shieldCap') ?? 0;
+  const kb = getNum('karaokeBonus') ?? 0;
+  const dm = $('duelMode').value;
+  if (members.length < 2) errors.push('メンバーは2人以上入力してください。');
+
+  const raw = { b:[], w:[], du:[], k:[], d:[] };
+  members.forEach((m,i)=>{
+    const g1 = getNum(makeId('bowling',i,'g1'));
+    const g2 = getNum(makeId('bowling',i,'g2'));
+    const g3 = getNum(makeId('bowling',i,'g3'));
+    if (g1 == null) errors.push(`${m}：ボウリング1ゲーム目が未入力です。`);
+    if (g2 == null) errors.push(`${m}：ボウリング2ゲーム目が未入力です。`);
+    if (g3 == null) errors.push(`${m}：ボウリング3ゲーム目が未入力です。`);
+    const bTotal = (g1 ?? 0) + (g2 ?? 0) + (g3 ?? 0);
+    raw.b.push({g1,g2,g3,total:bTotal});
+
+    const w = getNum(makeId('wanko',i,'bowls')); if (w == null) errors.push(`${m}：わんこそばが未入力です。`); raw.w.push(w ?? 0);
+
+    const main = getNum(makeId('duel',i,dm==='rank'?'rank':'wins'));
+    const sh = getNum(makeId('duel',i,'shields'));
+    if (main == null) errors.push(`${m}：デュエマの${dm==='rank'?'順位':'勝利数'}が未入力です。`);
+    if (sh == null) errors.push(`${m}：シールド破壊枚数が未入力です。`);
+    if (dm==='rank' && main != null && (main < 1 || main > members.length)) errors.push(`${m}：デュエマ順位は1〜${members.length}で入力してください。`);
+    raw.du.push({main:main ?? 0, sh:sh ?? 0});
+
+    const s1 = getNum(makeId('karaoke',i,'s1')), s2 = getNum(makeId('karaoke',i,'s2')), s3 = getNum(makeId('karaoke',i,'s3')), p = getNum(makeId('karaoke',i,'pred'));
+    if (s1 == null) errors.push(`${m}：カラオケ1曲目が未入力です。`);
+    if (s2 == null) errors.push(`${m}：カラオケ2曲目が未入力です。`);
+    if (s3 == null) errors.push(`${m}：カラオケ3曲目が未入力です。`);
+    if (p == null) errors.push(`${m}：カラオケ予想合計が未入力です。`);
+    const kTotal = (s1 ?? 0) + (s2 ?? 0) + (s3 ?? 0);
+    raw.k.push({avg:kTotal/3, total:kTotal, pred:p ?? 0});
+
+    const d = getNum(makeId('darts',i,'score'));
+    const type = $(makeId('darts',i,'type'))?.value || 'COUNT-UP';
+    if (d == null) errors.push(`${m}：ダーツのスコアが未入力です。`);
+    raw.d.push({score:d ?? 0, type});
+  });
+
+  if (errors.length) return { errors };
+
+  const rows = members.map(name=>({name,total:0,events:{}}));
+  const add = (key, arr) => arr.forEach((e,i)=>{ rows[i].events[key] = e; rows[i].total += e.total; });
+
+  const br = rel(raw.b.map(x=>x.total), tie);
+  add('bowling', raw.b.map((v,i)=>({g1:v.g1,g2:v.g2,g3:v.g3,raw:v.total,rel:br[i],bonus:0,total:br[i]})));
+
+  const wr = rel(raw.w, tie);
+  add('wanko', raw.w.map((v,i)=>({raw:v,rel:wr[i],bonus:0,total:wr[i]})));
+
+  const dr = dm==='rank' ? raw.du.map(r=>rankPt(r.main, members.length)) : rel(raw.du.map(r=>r.main), tie);
+  add('duel', raw.du.map((r,i)=>{ const bonus = Math.min(r.sh * sb, cap); return {raw:r.main, shields:r.sh, rel:dr[i], bonus, total:dr[i]+bonus}; }));
+
+  const kr = rel(raw.k.map(r=>r.avg), tie);
+  add('karaoke', raw.k.map((r,i)=>{ const diff = Math.abs(r.total - r.pred); const bonus = diff <= 3 ? kb : 0; return {raw:r.avg, totalScore:r.total, pred:r.pred, diff, rel:kr[i], bonus, total:kr[i]+bonus}; }));
+
+  const dar = rel(raw.d.map(r=>r.score), tie);
+  add('darts', raw.d.map((r,i)=>({raw:r.score, type:r.type, rel:dar[i], bonus:0, total:dar[i]})));
+
+  rows.sort((a,b)=>b.total-a.total);
+  let prev=null, prevRank=0;
+  rows.forEach((r,i)=>{ r.rank = r.total===prev ? prevRank : i+1; prev = r.total; prevRank = r.rank; });
+  return { errors:[], rows, dm };
 }
 
 function renderResults(c){
- $("overall").innerHTML=`<div class="tableWrap"><table><thead><tr><th>順位</th><th>名前</th><th>ボウリング</th><th>わんこ</th><th>デュエマ</th><th>カラオケ</th><th>ダーツ</th><th>総合</th></tr></thead><tbody>${c.rows.map(r=>`<tr class="r${r.rank}"><td>${r.rank}位</td><td>${esc(r.name)}</td><td>${f(r.events.bowling.total)}</td><td>${f(r.events.wanko.total)}</td><td>${f(r.events.duel.total)}</td><td>${f(r.events.karaoke.total)}</td><td>${f(r.events.darts.total)}</td><td><b>${f(r.total)}</b></td></tr>`).join("")}</tbody></table></div>`;
- const names={bowling:"ボウリング",wanko:"わんこそば",duel:"デュエマ",karaoke:"カラオケ",darts:"ダーツ"};
- $("details").innerHTML=Object.keys(names).map(k=>`<h3>${names[k]}</h3><div class="tableWrap"><table><thead><tr><th>名前</th><th>元記録</th><th>相対</th><th>ボーナス</th><th>種目合計</th><th>メモ</th></tr></thead><tbody>${c.rows.map(r=>{const e=r.events[k];let raw=f(e.raw),memo="";if(k==="duel"){raw=c.dm==="rank"?`${f(e.raw,0)}位`:`${f(e.raw,0)}勝`;memo=`シールド${f(e.shields,0)}枚`}if(k==="karaoke"){raw=`平均${f(e.raw,2)} / 合計${f(e.totalScore,1)}`;memo=`予想${f(e.pred,1)} / 差${f(e.diff,1)}`}if(k==="darts")memo=e.type;return`<tr><td>${esc(r.name)}</td><td>${raw}</td><td>${f(e.rel)}</td><td>${f(e.bonus)}</td><td><b>${f(e.total)}</b></td><td>${esc(memo)}</td></tr>`}).join("")}</tbody></table></div>`).join("");
+  $('overall').innerHTML = `<div class="tableWrap"><table><thead><tr><th>順位</th><th>名前</th><th>ボウリング</th><th>わんこ</th><th>デュエマ</th><th>カラオケ</th><th>ダーツ</th><th>総合</th></tr></thead><tbody>${c.rows.map(r=>`<tr class="r${r.rank}"><td>${r.rank}位</td><td>${esc(r.name)}</td><td>${fmt(r.events.bowling.total)}</td><td>${fmt(r.events.wanko.total)}</td><td>${fmt(r.events.duel.total)}</td><td>${fmt(r.events.karaoke.total)}</td><td>${fmt(r.events.darts.total)}</td><td><b>${fmt(r.total)}</b></td></tr>`).join('')}</tbody></table></div>`;
+
+  const names = { bowling:'ボウリング', wanko:'わんこそば', duel:'デュエマ', karaoke:'カラオケ', darts:'ダーツ' };
+  $('details').innerHTML = Object.keys(names).map(key=>{
+    return `<h3>${names[key]}</h3><div class="tableWrap"><table><thead><tr><th>名前</th><th>元記録</th><th>相対</th><th>ボーナス</th><th>種目合計</th><th>メモ</th></tr></thead><tbody>${c.rows.map(r=>{
+      const e = r.events[key];
+      let raw = fmt(e.raw), memo = '';
+      if (key==='bowling'){ raw = `${fmt(e.g1,0)} / ${fmt(e.g2,0)} / ${fmt(e.g3,0)} = ${fmt(e.raw,0)}`; }
+      if (key==='duel'){ raw = c.dm==='rank' ? `${fmt(e.raw,0)}位` : `${fmt(e.raw,0)}勝`; memo = `シールド${fmt(e.shields,0)}枚`; }
+      if (key==='karaoke'){ raw = `平均${fmt(e.raw,2)} / 合計${fmt(e.totalScore,1)}`; memo = `予想${fmt(e.pred,1)} / 差${fmt(e.diff,1)}`; }
+      if (key==='darts'){ memo = e.type; }
+      return `<tr><td>${esc(r.name)}</td><td>${raw}</td><td>${fmt(e.rel)}</td><td>${fmt(e.bonus)}</td><td><b>${fmt(e.total)}</b></td><td>${esc(memo)}</td></tr>`;
+    }).join('')}</tbody></table></div>`;
+  }).join('');
 }
 
 function saveData(){
- const data={names:$("names").value,settings:{duelMode:$("duelMode")?.value,shieldBonus:$("shieldBonus")?.value,shieldCap:$("shieldCap")?.value,karaokeBonus:$("karaokeBonus")?.value,tieScore:$("tieScore")?.value},inputs:{}};
- document.querySelectorAll("input[id*='_'],select[id*='_']").forEach(x=>data.inputs[x.id]=x.value);
- localStorage.setItem(KEY,JSON.stringify(data));
+  const data = {
+    names: $('names').value,
+    settings: {
+      duelMode: $('duelMode')?.value,
+      shieldBonus: $('shieldBonus')?.value,
+      shieldCap: $('shieldCap')?.value,
+      karaokeBonus: $('karaokeBonus')?.value,
+      tieScore: $('tieScore')?.value,
+    },
+    inputs: {}
+  };
+  document.querySelectorAll('input[id],select[id]').forEach(el=>{ if (el.id) data.inputs[el.id] = el.value; });
+  localStorage.setItem(KEY, JSON.stringify(data));
 }
 
 function restore(){
- try{const d=JSON.parse(localStorage.getItem(KEY)||"null");if(!d)return;$("names").value=d.names||"";applyMembers(false);Object.entries(d.settings||{}).forEach(([k,v])=>{if($(k))$(k).value=v});render();Object.entries(d.inputs||{}).forEach(([k,v])=>{if($(k))$(k).value=v})}catch(e){}
+  try {
+    const data = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (!data) return;
+    $('names').value = data.names || '';
+    applyMembers(false);
+    Object.entries(data.settings || {}).forEach(([k,v])=>{ if ($(k)) $(k).value = v; });
+    render();
+    Object.entries(data.inputs || {}).forEach(([k,v])=>{ if ($(k)) $(k).value = v; });
+    updateAllBowlingTotals();
+  } catch(e) {}
 }
 
-$("setMembers").onclick=()=>applyMembers(true);
-$("sample").onclick=()=>{$("names").value="佐藤\n鈴木\n田中\n山田\n高橋";applyMembers(true)};
-$("clear").onclick=()=>{if(confirm("入力内容をすべて削除しますか？")){localStorage.removeItem(KEY);location.reload()}};
-$("rankBtn").onclick=()=>{saveData();const c=collect();if(c.errors.length){err(c.errors);$("resultArea").classList.add("hidden");return}err([]);renderResults(c);$("resultArea").classList.remove("hidden");$("resultArea").scrollIntoView({behavior:"smooth"})};
-$("hideBtn").onclick=()=>$("resultArea").classList.add("hidden");
-$("saveBtn").onclick=()=>{saveData();alert("保存しました。このブラウザ内で次回も復元できます。")};
-$("duelMode").onchange=()=>{saveData();render();$("resultArea").classList.add("hidden")};
-document.addEventListener("input",e=>{if(e.target.matches("input,textarea,select"))$("resultArea").classList.add("hidden")});
+$('setMembers').onclick = () => applyMembers(true);
+$('sample').onclick = () => { $('names').value = '佐藤\n鈴木\n田中\n山田\n高橋'; applyMembers(true); };
+$('clear').onclick = () => { if (confirm('入力内容をすべて削除しますか？')) { localStorage.removeItem(KEY); location.reload(); } };
+$('rankBtn').onclick = () => { saveData(); const c = collect(); if (c.errors.length) { showErrors(c.errors); $('resultArea').classList.add('hidden'); return; } showErrors([]); renderResults(c); $('resultArea').classList.remove('hidden'); $('resultArea').scrollIntoView({behavior:'smooth'}); };
+$('hideBtn').onclick = () => $('resultArea').classList.add('hidden');
+$('saveBtn').onclick = () => { saveData(); alert('保存しました。このブラウザ内で次回も復元できます。'); };
+$('duelMode').onchange = () => { saveData(); render(); $('resultArea').classList.add('hidden'); };
+document.addEventListener('input', e => {
+  if (e.target && e.target.id && e.target.id.startsWith('bowling_')) {
+    const parts = e.target.id.split('_');
+    if (parts.length >= 3) updateBowlingTotal(parts[1]);
+  }
+  if (e.target.matches('input,textarea,select')) $('resultArea').classList.add('hidden');
+});
+document.addEventListener('change', e => { if (e.target.matches('select')) $('resultArea').classList.add('hidden'); });
 restore();
 </script>
 </body>
