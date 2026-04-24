@@ -48,20 +48,42 @@ button.sub{background:#eef2ff;color:#1d4ed8}button.dark{background:#111827}butto
 }
 .printOnly{display:none}
 @media print{
-  body{background:#fff;color:#111827}
-  main{max-width:none;padding:0}
+  *{box-shadow:none!important;text-shadow:none!important}
+  html,body{background:#fff;color:#111827;width:297mm;min-height:210mm}
+  body{margin:0;zoom:.72}
+  main{max-width:none;width:100%;padding:0}
   header,.card:first-of-type,#inputArea,#revealOverlay,#confettiLayer,.actions,.pdfBtn,.formula{display:none!important}
-  #resultArea{display:block!important;box-shadow:none;border:0;padding:0;margin:0}
-  #resultArea h2{font-size:18pt;margin:0 0 10pt}
-  #resultArea h3{font-size:14pt;margin:16pt 0 6pt;break-after:avoid}
+  #resultArea{display:block!important;box-shadow:none;border:0;padding:0;margin:0;width:100%}
+  #resultArea h1{font-size:15pt;margin:0 0 2pt}
+  #resultArea h2{font-size:13pt;margin:0 0 4pt}
+  #resultArea h3{font-size:9.5pt;margin:5pt 0 2pt;break-after:avoid}
   .printOnly{display:block!important}
-  .tableWrap{border:1px solid #d1d5db;overflow:visible;break-inside:avoid;margin-bottom:12pt}
-  table{min-width:0;width:100%;font-size:9pt}
-  th,td{padding:5pt 6pt;white-space:normal}
+  .printOnly p{font-size:7.5pt;margin:0 0 4pt}
+  .tableWrap{border:1px solid #cbd5e1;overflow:visible;break-inside:avoid;margin-bottom:4pt;border-radius:0}
+  table{min-width:0!important;width:100%!important;table-layout:fixed;font-size:6.4pt;line-height:1.12}
+  th,td{padding:2pt 2.2pt!important;white-space:normal!important;word-break:break-word;border-bottom:1px solid #e5e7eb}
+  th{font-size:6.2pt}
   tr.r1 td,tr.r2 td,tr.r3 td{background:#fff!important}
-  .scoreCell{align-items:flex-end}
-  .rawScore{font-size:8pt;color:#555}
-  @page{size:A4 landscape;margin:10mm}
+  .scoreCell{align-items:flex-end;gap:0}
+  .scoreCell b{font-size:7pt}
+  .rawScore{font-size:5.7pt;color:#555}
+  #overall table th:nth-child(1),#overall table td:nth-child(1){width:5%}
+  #overall table th:nth-child(2),#overall table td:nth-child(2){width:10%}
+  #overall table th:nth-child(3),#overall table td:nth-child(3),
+  #overall table th:nth-child(4),#overall table td:nth-child(4),
+  #overall table th:nth-child(5),#overall table td:nth-child(5),
+  #overall table th:nth-child(6),#overall table td:nth-child(6),
+  #overall table th:nth-child(7),#overall table td:nth-child(7){width:13%}
+  #overall table th:nth-child(8),#overall table td:nth-child(8){width:8%}
+  #details table th:nth-child(1),#details table td:nth-child(1){width:6%}
+  #details table th:nth-child(2),#details table td:nth-child(2){width:10%}
+  #details table th:nth-child(3),#details table td:nth-child(3){width:21%}
+  #details table th:nth-child(4),#details table td:nth-child(4){width:8%}
+  #details table th:nth-child(5),#details table td:nth-child(5){width:8%}
+  #details table th:nth-child(6),#details table td:nth-child(6){width:9%}
+  #details table th:nth-child(7),#details table td:nth-child(7){width:11%}
+  #details table th:nth-child(8),#details table td:nth-child(8){width:27%}
+  @page{size:A4 landscape;margin:5mm}
 }
 
 @keyframes shine{0%{transform:translateX(-120%)}55%{transform:translateX(120%)}100%{transform:translateX(120%)}}
@@ -564,7 +586,7 @@ function outputPdf(){
   const pad = n => String(n).padStart(2,'0');
   const dateText = `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())} 出力`;
   if ($('printDate')) $('printDate').textContent = dateText;
-  window.print();
+  setTimeout(() => window.print(), 100);
 }
 
 
