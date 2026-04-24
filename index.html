@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>5種目 総合スコアボード</title>
+<style>
+body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f6f7fb;color:#111827;margin:0;line-height:1.6}
+main{max-width:1100px;margin:auto;padding:24px 14px 50px}
+h1{font-size:clamp(26px,4vw,44px);margin:0 0 8px}
+h2{margin:0 0 12px;font-size:22px}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;box-shadow:0 10px 24px #0001;padding:18px;margin:16px 0}
+label{display:block;font-weight:700;font-size:14px;margin-bottom:5px}
+input,textarea,select,button{font:inherit}
+input,textarea,select{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:10px;padding:9px;background:#fff}
+textarea{min-height:120px}
+button{border:0;border-radius:999px;padding:10px 18px;background:#2563eb;color:#fff;font-weight:800;cursor:pointer}
+button.sub{background:#eef2ff;color:#1d4ed8}
+button.dark{background:#111827}
+button.red{background:#fee2e2;color:#dc2626}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.event{border:1px solid #e5e7eb;border-radius:14px;padding:14px;margin-top:14px}
+.row{display:grid;grid-template-columns:150px repeat(4,1fr);gap:9px;align-items:end;border-top:1px solid #eee;padding:10px 0}
+.row:first-of-type{border-top:0}
+.name{font-weight:800;word-break:break-word}
+.note{color:#6b7280}
+.warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:12px;padding:10px;margin-top:10px}
+.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:10px;margin-top:10px;white-space:pre-line}
+.hidden{display:none!important}
+.tableWrap{overflow-x:auto;border:1px solid #e5e7eb;border-radius:14px;margin-top:10px}
+table{border-collapse:collapse;width:100%;min-width:820px;background:#fff}
+th,td{border-bottom:1px solid #e5e7eb;padding:9px 10px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+th{background:#f9fafb;color:#4b5563;font-size:13px}
+tr.r1 td{background:#fffbeb;font-weight:800}
+tr.r2 td{background:#f8fafc}
+tr.r3 td{background:#fff7ed}
+.pill{display:inline-block;margin-left:6px;background:#dcfce7;color:#166534;border-radius:999px;padding:2px 8px;font-size:12px;font-weight:800}
+.formula{font-family:ui-monospace,Consolas,monospace;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:10px;overflow-x:auto}
+@media(max-width:850px){.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr}table{min-width:760px}}
+</style>
+</head>
+<body>
+<main>
+<h1>5種目 総合スコアボード</h1>
+<p class="note">ボウリング・わんこそば・デュエマ・カラオケ・ダーツの記録を相対スコア化して総合ランキングを出します。ランキングは「ランキングを表示」を押すまで見えません。</p>
+
+<section class="card">
+<h2>1. メンバー登録</h2>
+<p class="note">1行に1人ずつ入力してください。5人以外でも動きます。</p>
+<label>メンバー名</label>
+<textarea id="names" placeholder="佐藤&#10;鈴木&#10;小林&#10;田中&#10;山田"></textarea>
+<div class="actions">
+<button id="setMembers">メンバーを確定</button>
+<button class="sub" id="sample">サンプルを入れる</button>
+<button class="red" id="clear">全データ削除</button>
+</div>
+<div class="warn">名前に「小林」が含まれる人は、ダーツ特別ルール対象者として自動選択されます。別名の場合は次の画面で選べます。</div>
+</section>
+
+<section class="card hidden" id="inputArea">
+<h2>2. ルール設定</h2>
+<div class="grid">
+<div><label>デュエマ基礎点</label><select id="duelMode"><option value="rank">順位で入力</option><option value="wins">勝利数で入力</option></select></div>
+<div><label>シールド破壊ボーナス</label><input id="shieldBonus" type="number" min="0" step="0.5" value="2"><small class="note">1枚あたり加点</small></div>
+<div><label>シールド加点上限</label><input id="shieldCap" type="number" min="0" step="1" value="20"><small class="note">初期値は最大+20点</small></div>
+<div><label>カラオケ予想ボーナス</label><input id="karaokeBonus" type="number" min="0" step="1" value="10"><small class="note">合計点の予想差±3点以内</small></div>
+<div><label>ダーツ特別ルール対象者</label><select id="special"></select><small class="note">対象者のみクリケットCU点数</small></div>
+<div><label>全員同点時の点数</label><input id="tieScore" type="number" min="0" max="100" value="70"></div>
+</div>
+<div class="warn">基礎点は「1位100点・最下位40点・中間は差で按分」です。ボーナスはその後に加算します。</div>
+<h2 style="margin-top:22px">3. 記録入力</h2>
+<div id="events"></div>
+<div class="actions">
+<button class="dark" id="rankBtn">ランキングを表示</button>
+<button class="sub" id="hideBtn">ランキングを隠す</button>
+<button class="sub" id="saveBtn">入力内容を保存</button>
+</div>
+<div id="errors" class="err hidden"></div>
+</section>
+
+<section class="card hidden" id="resultArea">
+<h2>総合ランキング</h2>
+<div id="overall"></div>
+<h2 style="margin-top:22px">種目別詳細</h2>
+<div id="details"></div>
+<h2 style="margin-top:22px">採点式</h2>
+<div class="formula">相対スコア = 40 + 60 × (自分の記録 - 最下位の記録) ÷ (1位の記録 - 最下位の記録)</div>
+</section>
+</main>
+
+<script>
+const KEY="five_event_scoreboard_v3";
+let members=[];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const id=(e,i,f)=>`${e}_${i}_${f}`;
+const n=id=>{const x=$(id); if(!x||x.value==="")return null; const v=Number(x.value); return Number.isFinite(v)?v:null};
+const f=(v,d=1)=>v==null||Number.isNaN(v)?"-":Number(v).toFixed(d).replace(/\.0$/,"");
+function rel(vals,tie){const max=Math.max(...vals),min=Math.min(...vals);return max===min?vals.map(_=>tie):vals.map(v=>40+60*((v-min)/(max-min)))}
+function rankPt(rank,c){return c<=1?100:100-(rank-1)*(60/(c-1))}
+function parseNames(){return $("names").value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean)}
+function err(list){$("errors").textContent=list.join("\n");$("errors").classList.toggle("hidden",!list.length)}
+function eventBlock(title,note,body){return `<div class="event"><h2>${title}</h2><p class="note">${note}</p>${body}</div>`}
+function setupSpecial(){
+  $("special").innerHTML=`<option value="">対象者なし</option>`+members.map((m,i)=>`<option value="${i}">${esc(m)}</option>`).join("");
+  const k=members.findIndex(m=>m.includes("小林")); if(k>=0)$("special").value=String(k);
+}
+function render(){
+ const dm=$("duelMode").value, sp=$("special").value;
+ let html="";
+ html+=eventBlock("ボウリング","3ゲーム合計スコアを入力",members.map((m,i)=>`<div class="row"><div class="name">${esc(m)}</div><div><label>3ゲーム合計</label><input id="${id("bowling",i,"score")}" type="number" min="0" step="1"></div></div>`).join(""));
+ html+=eventBlock("わんこそば","制限時間40分で食べた杯数を入力",members.map((m,i)=>`<div class="row"><div class="name">${esc(m)}</div><div><label>杯数</label><input id="${id("wanko",i,"bowls")}" type="number" min="0" step="1"></div></div>`).join(""));
+ html+=eventBlock("デュエマ","順位または勝利数に、合計シールド破壊枚数ボーナスを加算",members.map((m,i)=>`<div class="row"><div class="name">${esc(m)}</div><div><label>${dm==="rank"?"順位":"勝利数"}</label><input id="${id("duel",i,dm==="rank"?"rank":"wins")}" type="number" min="${dm==="rank"?1:0}" step="1"></div><div><label>合計シールド破壊枚数</label><input id="${id("duel",i,"shields")}" type="number" min="0" step="1"></div></div>`).join(""));
+ html+=eventBlock("カラオケ","3曲の点数と、事前に予想した合計点を入力",members.map((m,i)=>`<div class="row"><div class="name">${esc(m)}</div><div><label>1曲目</label><input id="${id("karaoke",i,"s1")}" type="number" min="0" step="0.1"></div><div><label>2曲目</label><input id="${id("karaoke",i,"s2")}" type="number" min="0" step="0.1"></div><div><label>3曲目</label><input id="${id("karaoke",i,"s3")}" type="number" min="0" step="0.1"></div><div><label>予想合計</label><input id="${id("karaoke",i,"pred")}" type="number" min="0" step="0.1"></div></div>`).join(""));
+ html+=eventBlock("ダーツ","通常はCOUNT-UP点数。特別ルール対象者のみクリケットカウントアップ点数を入力",members.map((m,i)=>{const special=String(i)===String(sp);return `<div class="row"><div class="name">${esc(m)}${special?'<span class="pill">クリケットCU</span>':""}</div><div><label>${special?"クリケットCU":"COUNT-UP"}スコア</label><input id="${id("darts",i,"score")}" type="number" min="0" step="1"></div></div>`}).join(""));
+ $("events").innerHTML=html;
+}
+function applyMembers(save=true){
+ members=parseNames();
+ if(!members.length){err(["メンバー名を入力してください。"]);return}
+ $("inputArea").classList.remove("hidden");$("resultArea").classList.add("hidden");err([]);
+ setupSpecial();render(); if(save)saveData();
+}
+function collect(){
+ const errors=[], tie=n("tieScore")??70, sb=n("shieldBonus")??0, cap=n("shieldCap")??0, kb=n("karaokeBonus")??0, dm=$("duelMode").value, sp=$("special").value;
+ if(members.length<2)errors.push("メンバーは2人以上入力してください。");
+ const raw={b:[],w:[],du:[],k:[],d:[]};
+ members.forEach((m,i)=>{
+  const b=n(id("bowling",i,"score")); if(b==null)errors.push(`${m}：ボウリング未入力です。`); raw.b.push(b??0);
+  const w=n(id("wanko",i,"bowls")); if(w==null)errors.push(`${m}：わんこそば未入力です。`); raw.w.push(w??0);
+  const main=n(id("duel",i,dm==="rank"?"rank":"wins")), sh=n(id("duel",i,"shields"));
+  if(main==null)errors.push(`${m}：デュエマの${dm==="rank"?"順位":"勝利数"}が未入力です。`);
+  if(sh==null)errors.push(`${m}：シールド破壊枚数が未入力です。`);
+  if(dm==="rank"&&main!=null&&(main<1||main>members.length))errors.push(`${m}：デュエマ順位は1〜${members.length}で入力してください。`);
+  raw.du.push({main:main??0,sh:sh??0});
+  const s1=n(id("karaoke",i,"s1")),s2=n(id("karaoke",i,"s2")),s3=n(id("karaoke",i,"s3")),p=n(id("karaoke",i,"pred"));
+  if(s1==null)errors.push(`${m}：カラオケ1曲目未入力です。`); if(s2==null)errors.push(`${m}：カラオケ2曲目未入力です。`); if(s3==null)errors.push(`${m}：カラオケ3曲目未入力です。`); if(p==null)errors.push(`${m}：カラオケ予想合計未入力です。`);
+  const total=(s1??0)+(s2??0)+(s3??0); raw.k.push({avg:total/3,total,p:p??0});
+  const d=n(id("darts",i,"score")); if(d==null)errors.push(`${m}：ダーツの${String(i)===String(sp)?"クリケットCU":"COUNT-UP"}スコアが未入力です。`); raw.d.push({score:d??0,special:String(i)===String(sp)});
+ });
+ if(errors.length)return{errors};
+ const rows=members.map(name=>({name,total:0,events:{}}));
+ function add(k,arr){arr.forEach((e,i)=>{rows[i].events[k]=e;rows[i].total+=e.total})}
+ const br=rel(raw.b,tie); add("bowling",raw.b.map((v,i)=>({raw:v,rel:br[i],bonus:0,total:br[i]})));
+ const wr=rel(raw.w,tie); add("wanko",raw.w.map((v,i)=>({raw:v,rel:wr[i],bonus:0,total:wr[i]})));
+ const dr=dm==="rank"?raw.du.map(r=>rankPt(r.main,members.length)):rel(raw.du.map(r=>r.main),tie);
+ add("duel",raw.du.map((r,i)=>{const bonus=Math.min(r.sh*sb,cap);return{raw:r.main,shields:r.sh,rel:dr[i],bonus,total:dr[i]+bonus}}));
+ const kr=rel(raw.k.map(r=>r.avg),tie);
+ add("karaoke",raw.k.map((r,i)=>{const diff=Math.abs(r.total-r.p),bonus=diff<=3?kb:0;return{raw:r.avg,totalScore:r.total,pred:r.p,diff,rel:kr[i],bonus,total:kr[i]+bonus}}));
+ const dar=rel(raw.d.map(r=>r.score),tie); add("darts",raw.d.map((r,i)=>({raw:r.score,special:r.special,rel:dar[i],bonus:0,total:dar[i]})));
+ rows.sort((a,b)=>b.total-a.total); let prev=null,pr=0; rows.forEach((r,i)=>{r.rank=r.total===prev?pr:i+1;prev=r.total;pr=r.rank});
+ return{errors:[],rows,dm};
+}
+function renderResults(c){
+ $("overall").innerHTML=`<div class="tableWrap"><table><thead><tr><th>順位</th><th>名前</th><th>ボウリング</th><th>わんこ</th><th>デュエマ</th><th>カラオケ</th><th>ダーツ</th><th>総合</th></tr></thead><tbody>${c.rows.map(r=>`<tr class="r${r.rank}"><td>${r.rank}位</td><td>${esc(r.name)}</td><td>${f(r.events.bowling.total)}</td><td>${f(r.events.wanko.total)}</td><td>${f(r.events.duel.total)}</td><td>${f(r.events.karaoke.total)}</td><td>${f(r.events.darts.total)}</td><td><b>${f(r.total)}</b></td></tr>`).join("")}</tbody></table></div>`;
+ const names={bowling:"ボウリング",wanko:"わんこそば",duel:"デュエマ",karaoke:"カラオケ",darts:"ダーツ"};
+ $("details").innerHTML=Object.keys(names).map(k=>`<h3>${names[k]}</h3><div class="tableWrap"><table><thead><tr><th>名前</th><th>元記録</th><th>相対</th><th>ボーナス</th><th>種目合計</th><th>メモ</th></tr></thead><tbody>${c.rows.map(r=>{const e=r.events[k];let raw=f(e.raw),memo="";if(k==="duel"){raw=c.dm==="rank"?`${f(e.raw,0)}位`:`${f(e.raw,0)}勝`;memo=`シールド${f(e.shields,0)}枚`}if(k==="karaoke"){raw=`平均${f(e.raw,2)} / 合計${f(e.totalScore,1)}`;memo=`予想${f(e.pred,1)} / 差${f(e.diff,1)}`}if(k==="darts")memo=e.special?"クリケットCU提出":"COUNT-UP提出";return`<tr><td>${esc(r.name)}</td><td>${raw}</td><td>${f(e.rel)}</td><td>${f(e.bonus)}</td><td><b>${f(e.total)}</b></td><td>${esc(memo)}</td></tr>`}).join("")}</tbody></table></div>`).join("");
+}
+function saveData(){
+ const data={names:$("names").value,settings:{duelMode:$("duelMode")?.value,shieldBonus:$("shieldBonus")?.value,shieldCap:$("shieldCap")?.value,karaokeBonus:$("karaokeBonus")?.value,special:$("special")?.value,tieScore:$("tieScore")?.value},inputs:{}};
+ document.querySelectorAll("input[id*='_']").forEach(x=>data.inputs[x.id]=x.value);
+ localStorage.setItem(KEY,JSON.stringify(data));
+}
+function restore(){
+ try{const d=JSON.parse(localStorage.getItem(KEY)||"null");if(!d)return;$("names").value=d.names||"";applyMembers(false);Object.entries(d.settings||{}).forEach(([k,v])=>{if($(k))$(k).value=v});render();Object.entries(d.inputs||{}).forEach(([k,v])=>{if($(k))$(k).value=v})}catch(e){}
+}
+$("setMembers").onclick=()=>applyMembers(true);
+$("sample").onclick=()=>{$("names").value="佐藤\n鈴木\n小林\n田中\n山田";applyMembers(true)};
+$("clear").onclick=()=>{if(confirm("入力内容をすべて削除しますか？")){localStorage.removeItem(KEY);location.reload()}};
+$("rankBtn").onclick=()=>{saveData();const c=collect();if(c.errors.length){err(c.errors);$("resultArea").classList.add("hidden");return}err([]);renderResults(c);$("resultArea").classList.remove("hidden");$("resultArea").scrollIntoView({behavior:"smooth"})};
+$("hideBtn").onclick=()=>$("resultArea").classList.add("hidden");
+$("saveBtn").onclick=()=>{saveData();alert("保存しました。このブラウザ内で次回も復元できます。")};
+$("duelMode").onchange=()=>{saveData();render();$("resultArea").classList.add("hidden")};
+$("special").onchange=()=>{saveData();render();$("resultArea").classList.add("hidden")};
+document.addEventListener("input",e=>{if(e.target.matches("input,textarea,select"))$("resultArea").classList.add("hidden")});
+restore();
+</script>
+</body>
+</html>
