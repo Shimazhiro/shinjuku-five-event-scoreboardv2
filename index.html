@@ -41,13 +41,9 @@ button.sub{background:#eef2ff;color:#1d4ed8}button.dark{background:#111827}butto
 <section class="card hidden" id="inputArea">
 <h2>2. ルール設定</h2>
 <div class="grid">
-<div><label>デュエマ基礎点</label><select id="duelMode"><option value="rank">順位で入力</option><option value="wins">勝利数で入力</option></select></div>
-<div><label>シールド破壊ボーナス</label><input id="shieldBonus" type="number" min="0" step="0.5" value="2"><small class="note">1枚あたり加点</small></div>
-<div><label>シールド加点上限</label><input id="shieldCap" type="number" min="0" step="1" value="20"><small class="note">初期値は最大+20点</small></div>
-<div><label>カラオケ予想ボーナス</label><input id="karaokeBonus" type="number" min="0" step="1" value="10"><small class="note">合計点の予想差±3点以内</small></div>
-<div><label>全員同点時の点数</label><input id="tieScore" type="number" min="0" max="100" value="70"></div>
+<div><label>カラオケ予想ボーナス</label><input id="karaokeBonus" type="number" min="0" step="1" value="20"><small class="note">3曲合計の予想誤差が一番小さい人に加点</small></div>
 </div>
-<div class="warn">基礎点は「1位100点・最下位40点・中間は差で按分」です。ボーナスはその後に加算します。</div>
+<div class="warn">各種目は「1位100点・最下位40点・中間は差で按分」です。デュエマは順位のみで点数化します。カラオケ予想ボーナスは、予想誤差が一番小さい人に加算します。</div>
 <h2 style="margin-top:22px">3. 記録入力</h2>
 <div id="events"></div>
 <div class="actions">
@@ -64,7 +60,7 @@ button.sub{background:#eef2ff;color:#1d4ed8}button.dark{background:#111827}butto
 <h2 style="margin-top:22px">種目別詳細</h2>
 <div id="details"></div>
 <h2 style="margin-top:22px">採点式</h2>
-<div class="formula">相対スコア = 40 + 60 × (自分の記録 - 最下位の記録) ÷ (1位の記録 - 最下位の記録)</div>
+<div class="formula">相対スコア = 40 + 60 × (自分の記録 - 最下位の記録) ÷ (1位の記録 - 最下位の記録)<br>デュエマ順位点 = 1位100点、最下位40点、中間順位は等間隔<br>カラオケ予想ボーナス = 予想誤差が一番小さい人に+20点</div>
 </section>
 </main>
 
@@ -97,7 +93,6 @@ function updateBowlingTotal(i){
 function updateAllBowlingTotals(){ members.forEach((_,i)=>updateBowlingTotal(i)); }
 
 function render(){
-  const dm = $('duelMode').value;
   let html = '';
 
   html += eventBlock('ボウリング', '1ゲームごとの点数を入力すると、合計が自動計算されます。', members.map((m,i)=>`
@@ -112,14 +107,13 @@ function render(){
   html += eventBlock('わんこそば', '制限時間40分で食べた杯数を入力', members.map((m,i)=>`
     <div class="row"><div class="name">${esc(m)}</div><div><label>杯数</label><input id="${makeId('wanko',i,'bowls')}" type="number" min="0" step="1"></div></div>`).join(''));
 
-  html += eventBlock('デュエマ', '順位または勝利数に、合計シールド破壊枚数ボーナスを加算', members.map((m,i)=>`
+  html += eventBlock('デュエマ', '順位のみを入力してください。順位に応じて点数を振り分けます。', members.map((m,i)=>`
     <div class="row">
       <div class="name">${esc(m)}</div>
-      <div><label>${dm==='rank' ? '順位' : '勝利数'}</label><input id="${makeId('duel',i,dm==='rank'?'rank':'wins')}" type="number" min="${dm==='rank'?1:0}" step="1"></div>
-      <div><label>合計シールド破壊枚数</label><input id="${makeId('duel',i,'shields')}" type="number" min="0" step="1"></div>
+      <div><label>順位</label><input id="${makeId('duel',i,'rank')}" type="number" min="1" step="1"></div>
     </div>`).join(''));
 
-  html += eventBlock('カラオケ', '3曲の点数と、事前に予想した合計点を入力', members.map((m,i)=>`
+  html += eventBlock('カラオケ', '3曲の点数と、事前に予想した合計点を入力。予想誤差が一番小さい人にボーナスが入ります。', members.map((m,i)=>`
     <div class="row">
       <div class="name">${esc(m)}</div>
       <div><label>1曲目</label><input id="${makeId('karaoke',i,'s1')}" type="number" min="0" step="0.1"></div>
@@ -151,11 +145,7 @@ function applyMembers(save=true){
 
 function collect(){
   const errors = [];
-  const tie = getNum('tieScore') ?? 70;
-  const sb = getNum('shieldBonus') ?? 0;
-  const cap = getNum('shieldCap') ?? 0;
-  const kb = getNum('karaokeBonus') ?? 0;
-  const dm = $('duelMode').value;
+  const kb = getNum('karaokeBonus') ?? 20;
   if (members.length < 2) errors.push('メンバーは2人以上入力してください。');
 
   const raw = { b:[], w:[], du:[], k:[], d:[] };
@@ -166,17 +156,16 @@ function collect(){
     if (g1 == null) errors.push(`${m}：ボウリング1ゲーム目が未入力です。`);
     if (g2 == null) errors.push(`${m}：ボウリング2ゲーム目が未入力です。`);
     if (g3 == null) errors.push(`${m}：ボウリング3ゲーム目が未入力です。`);
-    const bTotal = (g1 ?? 0) + (g2 ?? 0) + (g3 ?? 0);
-    raw.b.push({g1,g2,g3,total:bTotal});
+    raw.b.push({g1,g2,g3,total:(g1 ?? 0)+(g2 ?? 0)+(g3 ?? 0)});
 
-    const w = getNum(makeId('wanko',i,'bowls')); if (w == null) errors.push(`${m}：わんこそばが未入力です。`); raw.w.push(w ?? 0);
+    const w = getNum(makeId('wanko',i,'bowls'));
+    if (w == null) errors.push(`${m}：わんこそばが未入力です。`);
+    raw.w.push(w ?? 0);
 
-    const main = getNum(makeId('duel',i,dm==='rank'?'rank':'wins'));
-    const sh = getNum(makeId('duel',i,'shields'));
-    if (main == null) errors.push(`${m}：デュエマの${dm==='rank'?'順位':'勝利数'}が未入力です。`);
-    if (sh == null) errors.push(`${m}：シールド破壊枚数が未入力です。`);
-    if (dm==='rank' && main != null && (main < 1 || main > members.length)) errors.push(`${m}：デュエマ順位は1〜${members.length}で入力してください。`);
-    raw.du.push({main:main ?? 0, sh:sh ?? 0});
+    const duelRank = getNum(makeId('duel',i,'rank'));
+    if (duelRank == null) errors.push(`${m}：デュエマ順位が未入力です。`);
+    if (duelRank != null && (duelRank < 1 || duelRank > members.length)) errors.push(`${m}：デュエマ順位は1〜${members.length}で入力してください。`);
+    raw.du.push({rank:duelRank ?? 0});
 
     const s1 = getNum(makeId('karaoke',i,'s1')), s2 = getNum(makeId('karaoke',i,'s2')), s3 = getNum(makeId('karaoke',i,'s3')), p = getNum(makeId('karaoke',i,'pred'));
     if (s1 == null) errors.push(`${m}：カラオケ1曲目が未入力です。`);
@@ -184,7 +173,7 @@ function collect(){
     if (s3 == null) errors.push(`${m}：カラオケ3曲目が未入力です。`);
     if (p == null) errors.push(`${m}：カラオケ予想合計が未入力です。`);
     const kTotal = (s1 ?? 0) + (s2 ?? 0) + (s3 ?? 0);
-    raw.k.push({avg:kTotal/3, total:kTotal, pred:p ?? 0});
+    raw.k.push({avg:kTotal/3, total:kTotal, pred:p ?? 0, diff:Math.abs(kTotal - (p ?? 0))});
 
     const d = getNum(makeId('darts',i,'score'));
     const type = $(makeId('darts',i,'type'))?.value || 'COUNT-UP';
@@ -197,39 +186,39 @@ function collect(){
   const rows = members.map(name=>({name,total:0,events:{}}));
   const add = (key, arr) => arr.forEach((e,i)=>{ rows[i].events[key] = e; rows[i].total += e.total; });
 
-  const br = rel(raw.b.map(x=>x.total), tie);
+  const br = rel(raw.b.map(x=>x.total), 70);
   add('bowling', raw.b.map((v,i)=>({g1:v.g1,g2:v.g2,g3:v.g3,raw:v.total,rel:br[i],bonus:0,total:br[i]})));
 
-  const wr = rel(raw.w, tie);
+  const wr = rel(raw.w, 70);
   add('wanko', raw.w.map((v,i)=>({raw:v,rel:wr[i],bonus:0,total:wr[i]})));
 
-  const dr = dm==='rank' ? raw.du.map(r=>rankPt(r.main, members.length)) : rel(raw.du.map(r=>r.main), tie);
-  add('duel', raw.du.map((r,i)=>{ const bonus = Math.min(r.sh * sb, cap); return {raw:r.main, shields:r.sh, rel:dr[i], bonus, total:dr[i]+bonus}; }));
+  add('duel', raw.du.map(r=>({raw:r.rank, rel:rankPt(r.rank, members.length), bonus:0, total:rankPt(r.rank, members.length)})));
 
-  const kr = rel(raw.k.map(r=>r.avg), tie);
-  add('karaoke', raw.k.map((r,i)=>{ const diff = Math.abs(r.total - r.pred); const bonus = diff <= 3 ? kb : 0; return {raw:r.avg, totalScore:r.total, pred:r.pred, diff, rel:kr[i], bonus, total:kr[i]+bonus}; }));
+  const kr = rel(raw.k.map(r=>r.avg), 70);
+  const minDiff = Math.min(...raw.k.map(r=>r.diff));
+  add('karaoke', raw.k.map((r,i)=>{
+    const bonus = r.diff === minDiff ? kb : 0;
+    return {raw:r.avg, totalScore:r.total, pred:r.pred, diff:r.diff, rel:kr[i], bonus, total:kr[i]+bonus};
+  }));
 
-  const dar = rel(raw.d.map(r=>r.score), tie);
+  const dar = rel(raw.d.map(r=>r.score), 70);
   add('darts', raw.d.map((r,i)=>({raw:r.score, type:r.type, rel:dar[i], bonus:0, total:dar[i]})));
 
   rows.sort((a,b)=>b.total-a.total);
   let prev=null, prevRank=0;
   rows.forEach((r,i)=>{ r.rank = r.total===prev ? prevRank : i+1; prev = r.total; prevRank = r.rank; });
-  return { errors:[], rows, dm };
+  return { errors:[], rows };
 }
 
 function rankingCell(point, rawText){
   return `<div class="scoreCell"><b>${fmt(point)}</b><span class="rawScore">${esc(rawText)}</span></div>`;
 }
 
-function overallRawText(r, key, dm){
+function overallRawText(r, key){
   const e = r.events[key];
   if (key === 'bowling') return `合計${fmt(e.raw,0)}点`;
   if (key === 'wanko') return `${fmt(e.raw,0)}杯`;
-  if (key === 'duel') {
-    const main = dm === 'rank' ? `${fmt(e.raw,0)}位` : `${fmt(e.raw,0)}勝`;
-    return `${main} / 盾${fmt(e.shields,0)}枚`;
-  }
+  if (key === 'duel') return `${fmt(e.raw,0)}位`;
   if (key === 'karaoke') return `合計${fmt(e.totalScore,1)}点 / 誤差${fmt(e.diff,1)}点`;
   if (key === 'darts') return `${e.type} ${fmt(e.raw,0)}点`;
   return '';
@@ -240,11 +229,11 @@ function renderResults(c){
     <tr class="r${r.rank}">
       <td>${r.rank}位</td>
       <td>${esc(r.name)}</td>
-      <td>${rankingCell(r.events.bowling.total, overallRawText(r,'bowling',c.dm))}</td>
-      <td>${rankingCell(r.events.wanko.total, overallRawText(r,'wanko',c.dm))}</td>
-      <td>${rankingCell(r.events.duel.total, overallRawText(r,'duel',c.dm))}</td>
-      <td>${rankingCell(r.events.karaoke.total, overallRawText(r,'karaoke',c.dm))}</td>
-      <td>${rankingCell(r.events.darts.total, overallRawText(r,'darts',c.dm))}</td>
+      <td>${rankingCell(r.events.bowling.total, overallRawText(r,'bowling'))}</td>
+      <td>${rankingCell(r.events.wanko.total, overallRawText(r,'wanko'))}</td>
+      <td>${rankingCell(r.events.duel.total, overallRawText(r,'duel'))}</td>
+      <td>${rankingCell(r.events.karaoke.total, overallRawText(r,'karaoke'))}</td>
+      <td>${rankingCell(r.events.darts.total, overallRawText(r,'darts'))}</td>
       <td><div class="scoreCell"><b>${fmt(r.total)}</b></div></td>
     </tr>`).join('')}</tbody></table></div>`;
 
@@ -254,7 +243,7 @@ function renderResults(c){
       const e = r.events[key];
       let raw = fmt(e.raw), memo = '';
       if (key==='bowling'){ raw = `${fmt(e.g1,0)} / ${fmt(e.g2,0)} / ${fmt(e.g3,0)} = ${fmt(e.raw,0)}`; }
-      if (key==='duel'){ raw = c.dm==='rank' ? `${fmt(e.raw,0)}位` : `${fmt(e.raw,0)}勝`; memo = `シールド${fmt(e.shields,0)}枚`; }
+      if (key==='duel'){ raw = `${fmt(e.raw,0)}位`; memo = '順位点のみ'; }
       if (key==='karaoke'){ raw = `平均${fmt(e.raw,2)} / 合計${fmt(e.totalScore,1)}`; memo = `予想${fmt(e.pred,1)} / 差${fmt(e.diff,1)}`; }
       if (key==='darts'){ memo = e.type; }
       return `<tr><td>${esc(r.name)}</td><td>${raw}</td><td>${fmt(e.rel)}</td><td>${fmt(e.bonus)}</td><td><b>${fmt(e.total)}</b></td><td>${esc(memo)}</td></tr>`;
@@ -265,13 +254,7 @@ function renderResults(c){
 function saveData(){
   const data = {
     names: $('names').value,
-    settings: {
-      duelMode: $('duelMode')?.value,
-      shieldBonus: $('shieldBonus')?.value,
-      shieldCap: $('shieldCap')?.value,
-      karaokeBonus: $('karaokeBonus')?.value,
-      tieScore: $('tieScore')?.value,
-    },
+    settings: { karaokeBonus: $('karaokeBonus')?.value },
     inputs: {}
   };
   document.querySelectorAll('input[id],select[id]').forEach(el=>{ if (el.id) data.inputs[el.id] = el.value; });
@@ -297,7 +280,7 @@ $('clear').onclick = () => { if (confirm('入力内容をすべて削除しま�
 $('rankBtn').onclick = () => { saveData(); const c = collect(); if (c.errors.length) { showErrors(c.errors); $('resultArea').classList.add('hidden'); return; } showErrors([]); renderResults(c); $('resultArea').classList.remove('hidden'); $('resultArea').scrollIntoView({behavior:'smooth'}); };
 $('hideBtn').onclick = () => $('resultArea').classList.add('hidden');
 $('saveBtn').onclick = () => { saveData(); alert('保存しました。このブラウザ内で次回も復元できます。'); };
-$('duelMode').onchange = () => { saveData(); render(); $('resultArea').classList.add('hidden'); };
+
 document.addEventListener('input', e => {
   if (e.target && e.target.id && e.target.id.startsWith('bowling_')) {
     const parts = e.target.id.split('_');
