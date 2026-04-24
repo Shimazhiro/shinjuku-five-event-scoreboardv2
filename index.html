@@ -17,7 +17,7 @@ button.sub{background:#eef2ff;color:#1d4ed8}button.dark{background:#111827}butto
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .event{border:1px solid #e5e7eb;border-radius:14px;padding:14px;margin-top:14px}.row{display:grid;grid-template-columns:150px repeat(4,1fr);gap:9px;align-items:end;border-top:1px solid #eee;padding:10px 0}.row:first-of-type{border-top:0}
 .name{font-weight:800;word-break:break-word}.note{color:#6b7280}.warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:12px;padding:10px;margin-top:10px}.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:10px;margin-top:10px;white-space:pre-line}.hidden{display:none!important}
-.tableWrap{overflow-x:auto;border:1px solid #e5e7eb;border-radius:14px;margin-top:10px}table{border-collapse:collapse;width:100%;min-width:840px;background:#fff}th,td{border-bottom:1px solid #e5e7eb;padding:9px 10px;text-align:right;white-space:nowrap}th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}th{background:#f9fafb;color:#4b5563;font-size:13px}tr.r1 td{background:#fffbeb;font-weight:800}tr.r2 td{background:#f8fafc}tr.r3 td{background:#fff7ed}.formula{font-family:ui-monospace,Consolas,monospace;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:10px;overflow-x:auto}
+.tableWrap{overflow-x:auto;border:1px solid #e5e7eb;border-radius:14px;margin-top:10px}table{border-collapse:collapse;width:100%;min-width:840px;background:#fff}th,td{border-bottom:1px solid #e5e7eb;padding:9px 10px;text-align:right;white-space:nowrap}th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}th{background:#f9fafb;color:#4b5563;font-size:13px}tr.r1 td{background:#fffbeb;font-weight:800}tr.r2 td{background:#f8fafc}tr.r3 td{background:#fff7ed}.formula{font-family:ui-monospace,Consolas,monospace;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:10px;overflow-x:auto}.scoreCell{display:flex;flex-direction:column;align-items:flex-end;gap:2px}.scoreCell b{font-size:15px}.rawScore{font-size:12px;color:#6b7280;font-weight:500}
 @media(max-width:900px){.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr}table{min-width:760px}}
 </style>
 </head>
@@ -218,8 +218,35 @@ function collect(){
   return { errors:[], rows, dm };
 }
 
+function rankingCell(point, rawText){
+  return `<div class="scoreCell"><b>${fmt(point)}</b><span class="rawScore">${esc(rawText)}</span></div>`;
+}
+
+function overallRawText(r, key, dm){
+  const e = r.events[key];
+  if (key === 'bowling') return `合計${fmt(e.raw,0)}点`;
+  if (key === 'wanko') return `${fmt(e.raw,0)}杯`;
+  if (key === 'duel') {
+    const main = dm === 'rank' ? `${fmt(e.raw,0)}位` : `${fmt(e.raw,0)}勝`;
+    return `${main} / 盾${fmt(e.shields,0)}枚`;
+  }
+  if (key === 'karaoke') return `平均${fmt(e.raw,2)}点`;
+  if (key === 'darts') return `${e.type} ${fmt(e.raw,0)}点`;
+  return '';
+}
+
 function renderResults(c){
-  $('overall').innerHTML = `<div class="tableWrap"><table><thead><tr><th>順位</th><th>名前</th><th>ボウリング</th><th>わんこ</th><th>デュエマ</th><th>カラオケ</th><th>ダーツ</th><th>総合</th></tr></thead><tbody>${c.rows.map(r=>`<tr class="r${r.rank}"><td>${r.rank}位</td><td>${esc(r.name)}</td><td>${fmt(r.events.bowling.total)}</td><td>${fmt(r.events.wanko.total)}</td><td>${fmt(r.events.duel.total)}</td><td>${fmt(r.events.karaoke.total)}</td><td>${fmt(r.events.darts.total)}</td><td><b>${fmt(r.total)}</b></td></tr>`).join('')}</tbody></table></div>`;
+  $('overall').innerHTML = `<div class="tableWrap"><table><thead><tr><th>順位</th><th>名前</th><th>ボウリング</th><th>わんこ</th><th>デュエマ</th><th>カラオケ</th><th>ダーツ</th><th>総合</th></tr></thead><tbody>${c.rows.map(r=>`
+    <tr class="r${r.rank}">
+      <td>${r.rank}位</td>
+      <td>${esc(r.name)}</td>
+      <td>${rankingCell(r.events.bowling.total, overallRawText(r,'bowling',c.dm))}</td>
+      <td>${rankingCell(r.events.wanko.total, overallRawText(r,'wanko',c.dm))}</td>
+      <td>${rankingCell(r.events.duel.total, overallRawText(r,'duel',c.dm))}</td>
+      <td>${rankingCell(r.events.karaoke.total, overallRawText(r,'karaoke',c.dm))}</td>
+      <td>${rankingCell(r.events.darts.total, overallRawText(r,'darts',c.dm))}</td>
+      <td><div class="scoreCell"><b>${fmt(r.total)}</b><span class="rawScore">総合点</span></div></td>
+    </tr>`).join('')}</tbody></table></div>`;
 
   const names = { bowling:'ボウリング', wanko:'わんこそば', duel:'デュエマ', karaoke:'カラオケ', darts:'ダーツ' };
   $('details').innerHTML = Object.keys(names).map(key=>{
