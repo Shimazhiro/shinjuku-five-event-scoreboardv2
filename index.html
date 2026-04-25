@@ -35,6 +35,19 @@ button.sub{background:#eef2ff;color:#1d4ed8}button.dark{background:#111827}butto
   animation:shine 2.2s ease-in-out infinite;
 }
 .rankMain:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.actionStack{
+  flex-direction:column;
+  align-items:stretch;
+}
+.saveRecordBtn{
+  display:block;
+  width:100%;
+  border-radius:16px;
+  padding:13px 20px;
+  font-size:17px;
+  font-weight:900;
+}
+
 .pdfBtn{
   background:#0f766e;
   box-shadow:0 10px 22px rgba(15,118,110,.22);
@@ -107,8 +120,9 @@ button.sub{background:#eef2ff;color:#1d4ed8}button.dark{background:#111827}butto
 <section class="card hidden" id="inputArea">
 <h2>2. 記録入力</h2>
 <div id="events"></div>
-<div class="actions">
+<div class="actions actionStack">
 <button class="dark rankMain" id="rankBtn">ランキングを表示</button>
+<button class="sub saveRecordBtn" id="saveRecordBtn">記録を保存</button>
 </div>
 <div id="errors" class="err hidden"></div>
 </section>
@@ -705,6 +719,7 @@ function outputPdf(){
 $('setMembers').onclick = () => applyMembers(true);
 $('sample').onclick = () => { $('names').value = '佐藤\n鈴木\n田中\n山田\n高橋'; applyMembers(false); fillSampleScores(); saveData(); };
 $('clear').onclick = () => { if (confirm('入力内容をすべて削除しますか？')) { localStorage.removeItem(KEY); location.reload(); } };
+$('saveRecordBtn').onclick = () => { saveData(); alert('記録を保存しました。このブラウザ内で次回も復元できます。'); };
 $('rankBtn').onclick = () => { saveData(); const c = collect(); if (c.errors.length) { showErrors(c.errors); $('resultArea').classList.add('hidden'); return; } showErrors([]); renderResults(c); $('resultArea').classList.add('hidden'); openRevealChoice(c.rows); };
 
 $('pdfBtn').onclick = outputPdf;
